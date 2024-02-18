@@ -2,21 +2,21 @@ package com.ecs160;
 
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.KeyEvent;
-import java.awt.event.KeyListener;
+import java.awt.event.*;
 import java.awt.geom.Line2D;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 import javax.imageio.ImageIO;
-
 class ImageComponent extends JPanel {
     private static BufferedImage image;
+    private static MusicSymbol sym = MusicSymbol.WHOLE;
     private static int grid_width = 666;
     private static double x_off = 0;
     private static double y_off = 0;
     private static int bonus_height = 0;
-    
+    private static int ix = 0;
+    private static int iy = 0;
     public ImageComponent(String imagePath) {
         try {
             image = ImageIO.read(new File(imagePath));
@@ -25,6 +25,10 @@ class ImageComponent extends JPanel {
         }
         setPreferredSize(new Dimension(500, 500));
         addKeyListener(new MyKeyListener());
+        addMouseListener(new MouseAdapter() {
+            public void mousePressed(MouseEvent e) {
+                System.out.println(sym.image.getRGB(e.getX(), e.getY()));
+            }});
         this.setFocusable(true);
     }
 
@@ -34,27 +38,37 @@ class ImageComponent extends JPanel {
         if (image != null) {
             Graphics2D g2 = (Graphics2D) g.create();
             int w = Math.min(getWidth(), getHeight());
+            w = Math.max(w, 1000);
             // System.out.println();
+            double conversionFactor = (double) image.getWidth() / (double) w;
             int gridSize = (int)((double) w / (double)((double)image.getWidth() / grid_width));
             int x_offset = (int) ((double)w * x_off);
             int y_offset = (int) ((double)w * y_off);
             // System.out.println(x_offset + ", " + y_offset);
-            // System.out.println(gridSize);
-            System.out.println(grid_width + ", " + x_off + ", " + y_off + ", " + bonus_height);
+            // System.out.println(conversionFactor + ", " + x_offset * conversionFactor + ", " + y_offset * conversionFactor + ", " + bonus_height * conversionFactor );
+            // System.out.println(grid_width + ", " + x_offset + ", " + y_offset + ", " + bonus_height);
             g2.setColor(Color.red);
             for (int i = 0; i < w / gridSize; i++) {
                 for (int j = 0; j < w / gridSize; j++) {
                     int x = i * gridSize + x_offset;
                     int y = j * gridSize + y_offset + bonus_height * j;
                     Line2D hor = new Line2D.Float(0,y, gridSize * 20, y);
-                    g2.draw(hor);
+                    // g2.draw(hor);
                     Line2D vet = new Line2D.Float(x, 0, x, gridSize * 20);            
-                    g2.draw(vet);
+                    // g2.draw(vet);
                     // g2.drawLine()
                     // g2.drawRect();
                 }
             }
-            g2.drawImage(image, 0, 0, w, w, this);
+
+            // g2.drawImage(image, 0, 0, w, w, this);
+            // g2.drawImage(image,10, 10, 100, 100, ix * 675 - 84, iy * (675 - 38) + 327,(ix + 1) * 675 - 84, (iy + 1) * (675 - 38) + 327, null);
+            // MusicImage test = MusicImage.QUARTER;
+            // BufferedImage images[] = {MusicImage.WHOLE.image, MusicImage.HALF.image, MusicImage.QUARTER.image};
+            // for (int i = 0; i < images.length; i++) {
+            //     g2.drawImage(images[i], 10 + 100 * i, 10, 10 + 100 * (i+ 1), 100, null);
+            // }
+            g2.drawImage(sym.image, 0, 0,sym.image.getWidth() , sym.image.getHeight(), null);
             g2.dispose();
         }
     }
@@ -80,15 +94,19 @@ class ImageComponent extends JPanel {
                     break;
                 case 'j':
                     x_off -= 0.001;
+                    ix -= 1;
                     break;
                 case 'l':
                     x_off += 0.001;
+                    ix += 1;
                     break;
                 case 'w':
                     y_off -= 0.001;
+                    iy -= 1;
                     break;
                 case 's':
                     y_off += 0.001;
+                    iy += 1;
                     break;
                 case 'x':
                     bonus_height += 1;
@@ -111,7 +129,7 @@ class ImageComponent extends JPanel {
         }
     }
 
-x    public static void main(String[] args) {
+    public static void main(String[] args) {
         SwingUtilities.invokeLater(() -> {
             JFrame frame = new JFrame("Image Component");
             frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
