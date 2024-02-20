@@ -8,7 +8,7 @@ import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 import javax.imageio.ImageIO;
-class ImageComponent extends JPanel {
+class grid_finder extends JPanel {
     private static BufferedImage image;
     private static MusicSymbol sym = MusicSymbol.WHOLE;
     private static int grid_width = 666;
@@ -17,7 +17,7 @@ class ImageComponent extends JPanel {
     private static int bonus_height = 0;
     private static int ix = 0;
     private static int iy = 0;
-    public ImageComponent(String imagePath) {
+    public grid_finder(String imagePath) {
         try {
             image = ImageIO.read(new File(imagePath));
         } catch (IOException e) {
@@ -138,7 +138,7 @@ class ImageComponent extends JPanel {
             // Path to your image file
             String imagePath = "src\\main\\java\\com\\ecs160\\imgs\\notes.png";
 
-            ImageComponent imageComponent = new ImageComponent(imagePath);
+            grid_finder imageComponent = new grid_finder(imagePath);
             frame.add(imageComponent, BorderLayout.CENTER);
             frame.pack();
             frame.setLocationRelativeTo(null);
