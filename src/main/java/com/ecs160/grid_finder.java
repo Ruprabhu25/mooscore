@@ -27,7 +27,7 @@ class grid_finder extends JPanel {
         addKeyListener(new MyKeyListener());
         addMouseListener(new MouseAdapter() {
             public void mousePressed(MouseEvent e) {
-                System.out.println(sym.image.getRGB(e.getX(), e.getY()));
+                System.out.println(sym.image.getRGB(e.getX() / 10 , e.getY() / 10 ));
             }});
         this.setFocusable(true);
     }
@@ -68,7 +68,7 @@ class grid_finder extends JPanel {
             // for (int i = 0; i < images.length; i++) {
             //     g2.drawImage(images[i], 10 + 100 * i, 10, 10 + 100 * (i+ 1), 100, null);
             // }
-            g2.drawImage(sym.image, 0, 0,sym.image.getWidth() , sym.image.getHeight(), null);
+            g2.drawImage(sym.image, 0, 0,sym.image.getWidth() *10 , sym.image.getHeight() * 10, null);
             g2.dispose();
         }
     }
