@@ -14,7 +14,7 @@ public enum MusicSymbol {
     WHOLE (7, 2, 0.4, 16 * 4),
     HALF (5, 2, 1, 16 * 2),
     QUARTER (3, 2, 1, 16),
-    EIGTH (10, 3, 1, 8),
+    EIGHTH (10, 3, 1, 8),
     SIXTEENTH (9, 3, 1, 4);
     
     /* These fields are made public so that they can be accessed by other classes, but

@@ -79,7 +79,7 @@ public class TrackGUI extends JPanel {
         measureLocations = new ArrayList<Integer>();
         selected = new ArrayList<Symbol>();
         // Add some draggable components
-        MusicSymbol imgs[] = {MusicSymbol.QUARTER, MusicSymbol.HALF, MusicSymbol.EIGTH, MusicSymbol.WHOLE};
+        MusicSymbol imgs[] = {MusicSymbol.QUARTER, MusicSymbol.HALF, MusicSymbol.EIGHTH, MusicSymbol.WHOLE};
         for (int i = 0; i < 5 * imgs.length; i++) {
             createNewSymbol(imgs[i % imgs.length]);
         }
@@ -120,7 +120,7 @@ public class TrackGUI extends JPanel {
                     int x = s.getX();
                     int y = s.getY();
                     if (x >= minx && x <= maxx
-                     && y >= miny && y <= maxy) select(s);;
+                     && y >= miny && y <= maxy) select(s);
                     // else s.deselect();
                 }
                 // System.out.println(selected);
@@ -213,7 +213,7 @@ public class TrackGUI extends JPanel {
 
     private ArrayList<Component> getComponentsInXOrder() {
         ArrayList<Component> children = new ArrayList<Component>(Arrays.asList(getComponents()));
-        children.sort(Comparator.comparing(Component::getX));
+                children.sort(Comparator.comparing(Component::getX));
         return children;
     }
 
@@ -247,13 +247,13 @@ public class TrackGUI extends JPanel {
                 } 
             }
         }
-            // draw measure bars
+        // draw measure bars
         for (int i = 0; i < measureLocations.size(); i++) {
             int m = measureLocations.get(i);
             g2.drawLine(m, staffCenter - 2 * gridSize * 2, m, staffCenter + 2 * gridSize * 2);
             g2.drawString(Integer.toString(i), m, staffCenter + 4 * gridSize * 2);
         }
-            // draw mouse drag box
+        // draw mouse drag box
         if (drag_p1 == null || drag_p2 == null) return;
         int minx = Math.min(drag_p1.x, drag_p2.x);
         int maxx = Math.max(drag_p1.x, drag_p2.x);
@@ -266,7 +266,7 @@ public class TrackGUI extends JPanel {
     public Track getMidiTrack(Sequence sequence) {
         Track track = sequence.createTrack();
         ArrayList<Component> sorted = getComponentsInXOrder();
-        return track;
+                return track;
     } 
 
     public static void main(String[] args) {
