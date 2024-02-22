@@ -9,6 +9,7 @@ import java.io.IOException;
 import javax.imageio.ImageIO;
 
 public enum MusicSymbol {
+    // TODO: add rests
     BASS (1, 1, 1, -1),
     TREBLE (2, 2, 1, -1),
     WHOLE (7, 2, 0.4, 16 * 4),

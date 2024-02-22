@@ -63,7 +63,7 @@ class MenuBar extends JPanel {
 
         This is the user guide. Info goes here.
     """;
-    public MenuBar() {
+    public MenuBar(TrackGUI gui) {
         // Create a MenuBar
         JMenuBar MenuBar = new JMenuBar();
 
@@ -154,7 +154,7 @@ class MenuBar extends JPanel {
 }
 
 class ToolBar extends JPanel {
-    public ToolBar() {
+    public ToolBar(TrackGUI gui) {
         JToolBar toolBar = new JToolBar();
         toolBar.setLayout(new BoxLayout(toolBar, BoxLayout.Y_AXIS));
 
@@ -163,7 +163,7 @@ class ToolBar extends JPanel {
         JButton quarterNoteButton = new JButton(new ImageIcon(MusicSymbol.QUARTER.image.getScaledInstance(15,25,Image.SCALE_SMOOTH)));
         JButton halfNoteButton = new JButton(new ImageIcon(MusicSymbol.HALF.image.getScaledInstance(15,25,Image.SCALE_SMOOTH)));
         JButton wholeNoteButton = new JButton(new ImageIcon(MusicSymbol.WHOLE.image.getScaledInstance(18,15,Image.SCALE_SMOOTH)));
-        
+
         JButton sixteenthRestButton = new JButton();
         JButton eighthRestButton = new JButton();
         JButton quarterRestButton = new JButton();
@@ -176,8 +176,43 @@ class ToolBar extends JPanel {
         toolBar.add(halfNoteButton);
         toolBar.add(wholeNoteButton);
 
-        //TODO: add rest buttons
+        //TODO: add rest buttons (need images)
 
+        //add event listeners for current active notes
+        sixteenthNoteButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                gui.setActiveNote(MusicSymbol.SIXTEENTH);
+            }
+        });
+
+        eighthNoteButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                gui.setActiveNote(MusicSymbol.EIGTH);
+            }
+        });
+
+        quarterNoteButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                gui.setActiveNote(MusicSymbol.QUARTER);
+            }
+        });
+
+        halfNoteButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                gui.setActiveNote(MusicSymbol.HALF);
+            }
+        });
+
+        wholeNoteButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                gui.setActiveNote(MusicSymbol.WHOLE);
+            }
+        });
 
         setLayout(new BorderLayout());
         add(toolBar, BorderLayout.NORTH);
@@ -203,11 +238,14 @@ public class TrackGUI extends JPanel {
     private ArrayList<Integer> measureLocations;
     // a list of currently selected symbols
     private ArrayList<Symbol> selected;
+
+    private MusicSymbol activeMusicSymbol;
     
     public TrackGUI() {
         setLayout(null); // Use absolute positioning
         measureLocations = new ArrayList<Integer>();
         selected = new ArrayList<Symbol>();
+        activeMusicSymbol = MusicSymbol.QUARTER;
         // Add some draggable components
         MusicSymbol imgs[] = {MusicSymbol.QUARTER, MusicSymbol.HALF, MusicSymbol.EIGTH, MusicSymbol.WHOLE};
         for (int i = 0; i < 5 * imgs.length; i++) {
@@ -399,6 +437,10 @@ public class TrackGUI extends JPanel {
         return track;
     } 
 
+    public void setActiveNote(MusicSymbol note) {
+        this.activeMusicSymbol = note;
+    }
+
     public static void main(String[] args) {
         SwingUtilities.invokeLater(() -> {
             // Create a JFrame
@@ -410,8 +452,8 @@ public class TrackGUI extends JPanel {
             TrackGUI draggableContainer = new TrackGUI();
 
             // Create a MenuBar
-            MenuBar MenuBar = new MenuBar();
-            ToolBar ToolBar = new ToolBar();
+            MenuBar MenuBar = new MenuBar(draggableContainer);
+            ToolBar ToolBar = new ToolBar(draggableContainer);
 
             // Create a JScrollPane to add the draggable container with scrollbars
             JScrollPane scrollPane = new JScrollPane(draggableContainer);
