@@ -9,6 +9,7 @@ import java.io.IOException;
 import javax.imageio.ImageIO;
 
 public enum MusicSymbol {
+    // TODO: add rests
     BASS (1, 1, 1, -1),
     TREBLE (2, 2, 1, -1),
     WHOLE (7, 2, 0.4, 16 * 4),
@@ -85,7 +86,11 @@ public enum MusicSymbol {
         public Helper() {
             if (master == null)
                 try {
-                    master = ImageIO.read(new File( "src\\main\\java\\com\\ecs160\\imgs\\notes.png"));
+                    String osName = System.getProperty("os.name").toLowerCase();
+                    if (osName.contains("windows"))
+                        master = ImageIO.read(new File( "src\\main\\java\\com\\ecs160\\imgs\\notes.png"));
+                    else
+                        master = ImageIO.read(new File("src/main/java/com/ecs160/imgs/notes.png"));
                 } catch (IOException e) {
                     master = null;
                     e.printStackTrace();

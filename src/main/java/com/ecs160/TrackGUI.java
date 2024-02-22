@@ -3,6 +3,8 @@ package com.ecs160;
 import javax.sound.midi.Sequence;
 import javax.sound.midi.Track;
 import javax.swing.*;
+import javax.tools.Tool;
+
 import java.awt.*;
 import java.awt.event.*;
 import java.awt.image.BufferedImage;
@@ -54,6 +56,169 @@ class Symbol extends JComponent {
     }
 }
 
+class MenuBar extends JPanel {
+    private String user_guide_message = 
+    """
+        Hello
+
+        This is the user guide. Info goes here.
+    """;
+    public MenuBar(TrackGUI gui) {
+        // Create a MenuBar
+        JMenuBar MenuBar = new JMenuBar();
+
+        // Create buttons for File, Edit, and Help
+        JButton fileButton = new JButton("File");
+        JButton editButton = new JButton("Edit");
+        JButton helpButton = new JButton("Help");
+
+        // Add action listeners to the buttons
+        fileButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                // Create a popup menu for file options
+                JPopupMenu popupMenu = new JPopupMenu();
+                
+                // Create "Save" and "Load" menu items
+                JMenuItem saveMenuItem = new JMenuItem("Save");
+                JMenuItem loadMenuItem = new JMenuItem("Load");
+
+                saveMenuItem.addActionListener(new ActionListener() {
+                    @Override
+                    public void actionPerformed(ActionEvent e) {
+                    }
+                });
+                
+                loadMenuItem.addActionListener(new ActionListener() {
+                    @Override
+                    public void actionPerformed(ActionEvent e) {
+                    }
+                });
+                
+                // Add menu items to the popup menu
+                popupMenu.add(saveMenuItem);
+                popupMenu.add(loadMenuItem);
+                
+                // Display the popup menu at the location of the file button
+                popupMenu.show(fileButton, 0, fileButton.getHeight());
+            }
+
+        });
+
+        editButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                JPopupMenu popupMenu = new JPopupMenu();
+                
+                // Create "Save" and "Load" menu items
+                JMenuItem shiftMenuItem = new JMenuItem("shift");
+                JMenuItem clearMenuItem = new JMenuItem("clear");
+
+                shiftMenuItem.addActionListener(new ActionListener() {
+                    @Override
+                    public void actionPerformed(ActionEvent e) {
+                    }
+                });
+                
+                clearMenuItem.addActionListener(new ActionListener() {
+                    @Override
+                    public void actionPerformed(ActionEvent e) {
+                    }
+                });
+                
+                // Add menu items to the popup menu
+                popupMenu.add(shiftMenuItem);
+                popupMenu.add(clearMenuItem);
+                
+                // Display the popup menu at the location of the file button
+                popupMenu.show(fileButton, editButton.getWidth(), fileButton.getHeight());
+            }
+        });
+
+        helpButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                JOptionPane.showMessageDialog(MenuBar, user_guide_message, "User Guide", JOptionPane.PLAIN_MESSAGE);
+            }
+        });
+
+        // Add buttons to the MenuBar
+        MenuBar.add(fileButton);
+        MenuBar.add(editButton);
+        MenuBar.add(helpButton);
+
+        // Add the MenuBar to this panel
+        setLayout(new BorderLayout());
+        add(MenuBar, BorderLayout.NORTH);
+    }
+}
+
+class ToolBar extends JPanel {
+    public ToolBar(TrackGUI gui) {
+        JToolBar toolBar = new JToolBar();
+        toolBar.setLayout(new BoxLayout(toolBar, BoxLayout.Y_AXIS));
+
+        JButton sixteenthNoteButton = new JButton(new ImageIcon(MusicSymbol.SIXTEENTH.image.getScaledInstance(15,25,Image.SCALE_SMOOTH)));
+        JButton eighthNoteButton = new JButton(new ImageIcon(MusicSymbol.EIGTH.image.getScaledInstance(15,25,Image.SCALE_SMOOTH)));
+        JButton quarterNoteButton = new JButton(new ImageIcon(MusicSymbol.QUARTER.image.getScaledInstance(15,25,Image.SCALE_SMOOTH)));
+        JButton halfNoteButton = new JButton(new ImageIcon(MusicSymbol.HALF.image.getScaledInstance(15,25,Image.SCALE_SMOOTH)));
+        JButton wholeNoteButton = new JButton(new ImageIcon(MusicSymbol.WHOLE.image.getScaledInstance(18,15,Image.SCALE_SMOOTH)));
+
+        JButton sixteenthRestButton = new JButton();
+        JButton eighthRestButton = new JButton();
+        JButton quarterRestButton = new JButton();
+        JButton halfRestButton = new JButton();
+        JButton wholeRestButton = new JButton();
+
+        toolBar.add(sixteenthNoteButton);
+        toolBar.add(eighthNoteButton);
+        toolBar.add(quarterNoteButton);
+        toolBar.add(halfNoteButton);
+        toolBar.add(wholeNoteButton);
+
+        //TODO: add rest buttons (need images)
+
+        //add event listeners for current active notes
+        sixteenthNoteButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                gui.setActiveNote(MusicSymbol.SIXTEENTH);
+            }
+        });
+
+        eighthNoteButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                gui.setActiveNote(MusicSymbol.EIGTH);
+            }
+        });
+
+        quarterNoteButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                gui.setActiveNote(MusicSymbol.QUARTER);
+            }
+        });
+
+        halfNoteButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                gui.setActiveNote(MusicSymbol.HALF);
+            }
+        });
+
+        wholeNoteButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                gui.setActiveNote(MusicSymbol.WHOLE);
+            }
+        });
+
+        setLayout(new BorderLayout());
+        add(toolBar, BorderLayout.NORTH);
+    }
+}
+
 public class TrackGUI extends JPanel {
     // The number of pixels between each grid point
     private int gridSize = 10;
@@ -73,11 +238,14 @@ public class TrackGUI extends JPanel {
     private ArrayList<Integer> measureLocations;
     // a list of currently selected symbols
     private ArrayList<Symbol> selected;
+
+    private MusicSymbol activeMusicSymbol;
     
     public TrackGUI() {
         setLayout(null); // Use absolute positioning
         measureLocations = new ArrayList<Integer>();
         selected = new ArrayList<Symbol>();
+        activeMusicSymbol = MusicSymbol.QUARTER;
         // Add some draggable components
         MusicSymbol imgs[] = {MusicSymbol.QUARTER, MusicSymbol.HALF, MusicSymbol.EIGHTH, MusicSymbol.WHOLE};
         for (int i = 0; i < 5 * imgs.length; i++) {
@@ -269,14 +437,36 @@ public class TrackGUI extends JPanel {
                 return track;
     } 
 
+    public void setActiveNote(MusicSymbol note) {
+        this.activeMusicSymbol = note;
+    }
+
     public static void main(String[] args) {
         SwingUtilities.invokeLater(() -> {
+            // Create a JFrame
             JFrame frame = new JFrame("Draggable Container");
             frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
             frame.setSize(500, 500);
+
+            // Create a draggable container
             TrackGUI draggableContainer = new TrackGUI();
-            JScrollPane sp = new JScrollPane(draggableContainer);
-            frame.setContentPane(sp);
+
+            // Create a MenuBar
+            MenuBar MenuBar = new MenuBar(draggableContainer);
+            ToolBar ToolBar = new ToolBar(draggableContainer);
+
+            // Create a JScrollPane to add the draggable container with scrollbars
+            JScrollPane scrollPane = new JScrollPane(draggableContainer);
+
+            // Set the preferred size of the scroll pane (optional)
+            scrollPane.setPreferredSize(new Dimension(500, 400));
+
+            // Add the MenuBar and scroll pane to the frame
+            frame.add(MenuBar, BorderLayout.NORTH);
+            frame.add(ToolBar, BorderLayout.WEST);
+            frame.add(scrollPane, BorderLayout.CENTER);
+
+            // Make the frame visible
             frame.setVisible(true);
         });
     }
