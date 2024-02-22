@@ -85,7 +85,11 @@ public enum MusicSymbol {
         public Helper() {
             if (master == null)
                 try {
-                    master = ImageIO.read(new File( "src\\main\\java\\com\\ecs160\\imgs\\notes.png"));
+                    String osName = System.getProperty("os.name").toLowerCase();
+                    if (osName.contains("windows"))
+                        master = ImageIO.read(new File( "src\\main\\java\\com\\ecs160\\imgs\\notes.png"));
+                    else
+                        master = ImageIO.read(new File("src/main/java/com/ecs160/imgs/notes.png"));
                 } catch (IOException e) {
                     master = null;
                     e.printStackTrace();
