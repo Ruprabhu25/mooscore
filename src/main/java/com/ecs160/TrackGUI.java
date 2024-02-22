@@ -56,6 +56,9 @@ class Symbol extends JComponent {
     }
 }
 
+
+// can this be a JMenuBar rather than a panel? I think it will be more intuitive. The App example code uses a menu bar
+// if you want to see an example 
 class MenuBar extends JPanel {
     private String user_guide_message = 
     """
@@ -153,17 +156,23 @@ class MenuBar extends JPanel {
     }
 }
 
+// this class and the menubar class I think shoudl be defined in their own file, this file is getting very large
+// i also think these control panels should be decoupled from the TrackGUI panel
 class ToolBar extends JPanel {
     public ToolBar(TrackGUI gui) {
         JToolBar toolBar = new JToolBar();
         toolBar.setLayout(new BoxLayout(toolBar, BoxLayout.Y_AXIS));
-
+        
+        // can the width and height of the image icon be set using the w/h of the images themselves? the images should draw
+        // without being stretched to a certain shape 
         JButton sixteenthNoteButton = new JButton(new ImageIcon(MusicSymbol.SIXTEENTH.image.getScaledInstance(15,25,Image.SCALE_SMOOTH)));
-        JButton eighthNoteButton = new JButton(new ImageIcon(MusicSymbol.EIGTH.image.getScaledInstance(15,25,Image.SCALE_SMOOTH)));
+        JButton eighthNoteButton = new JButton(new ImageIcon(MusicSymbol.EIGHTH.image.getScaledInstance(15,25,Image.SCALE_SMOOTH)));
         JButton quarterNoteButton = new JButton(new ImageIcon(MusicSymbol.QUARTER.image.getScaledInstance(15,25,Image.SCALE_SMOOTH)));
         JButton halfNoteButton = new JButton(new ImageIcon(MusicSymbol.HALF.image.getScaledInstance(15,25,Image.SCALE_SMOOTH)));
         JButton wholeNoteButton = new JButton(new ImageIcon(MusicSymbol.WHOLE.image.getScaledInstance(18,15,Image.SCALE_SMOOTH)));
 
+        // you could create the missing rest enums if you want, just need to define their constructor in MusicSymbol
+        // i was thinking of naming them like #NOTE#_REST?
         JButton sixteenthRestButton = new JButton();
         JButton eighthRestButton = new JButton();
         JButton quarterRestButton = new JButton();
@@ -189,7 +198,7 @@ class ToolBar extends JPanel {
         eighthNoteButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                gui.setActiveNote(MusicSymbol.EIGTH);
+                gui.setActiveNote(MusicSymbol.EIGHTH);
             }
         });
 
