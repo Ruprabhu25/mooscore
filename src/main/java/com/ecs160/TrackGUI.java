@@ -233,8 +233,8 @@ public class TrackGUI extends JPanel {
     private int gridSize = 10;
     // The number of total grid points top to bottom. 
     // The staff is drawn in the center of this region
-    private int gridHeight = 41;
-    private int gridCenter = gridHeight / 2 + 1;
+    private int gridHeight = 61;
+    // private int gridCenter = gridHeight / 2 + 1;
     // this is the max dimension of every symbol. for example a quarter note has this height
     private int symbolSize = gridSize * 8;
     // these points define the start and end of the users drag pox
@@ -244,17 +244,19 @@ public class TrackGUI extends JPanel {
     // measure length in quarter notes. this reflects the meter of the track
     private int measureLength = MusicSymbol.RESOLUTION * 4; 
     // the X coordinates of measure bars
-    private ArrayList<Integer> measureLocations;
+    private ArrayList<Point> measureLocations;
     // a list of currently selected symbols
     private ArrayList<Symbol> selected;
-
+    // contains the child components seperated by vertical rows to allow drawing multiple staffs
+    private ArrayList<ArrayList<Symbol>> rows; 
     private MusicSymbol activeMusicSymbol;
     
     public TrackGUI() {
         setLayout(null); // Use absolute positioning
-        measureLocations = new ArrayList<Integer>();
+        measureLocations = new ArrayList<Point>();
         selected = new ArrayList<Symbol>();
-        activeMusicSymbol = MusicSymbol.QUARTER;
+        rows = new ArrayList<ArrayList<Symbol>>();
+        activeMusicSymbol = null;
         // Add some draggable components
         MusicSymbol imgs[] = {MusicSymbol.QUARTER, MusicSymbol.HALF, MusicSymbol.EIGHTH, MusicSymbol.WHOLE};
         for (int i = 0; i < 5 * imgs.length; i++) {
@@ -263,7 +265,7 @@ public class TrackGUI extends JPanel {
 
         addMouseListener(new MouseAdapter() {
             public void mousePressed(MouseEvent e) {
-                // check against all components
+                // check against all components to see if they were clicked on
                 moust_lastX = e.getX();
                 mouse_lastY = e.getY();
                 boolean found = false;
@@ -271,22 +273,25 @@ public class TrackGUI extends JPanel {
                     Symbol s = (Symbol) (c);
                     if (s.getBounds().contains(e.getPoint())) {
                         found = true;
+                        // if nothing is selected yet, select this
                         if (selected.isEmpty()) select(s);
+                        // if something else was selected, clear the selections then select this
                         else if (!selected.contains(s)) {
                             clearSelection();
                             select(s);
                         }
                     }
                 }
-                if (!found) {
-                    clearSelection();
-                }
+                // clicked on empty space, deselect everything
+                if (!found) clearSelection();
+                // set point to allow for drag boxing
                 drag_p1 = e.getPoint();
                 repaint();
             }
             
             public void mouseReleased(MouseEvent e) {
-                calculateMeasureLocations();
+                // done dragging, reset information
+                calculateMeasureLocations(); 
                 if (drag_p1 == null || drag_p2 == null) return;
                 int minx = Math.min(drag_p1.x, drag_p2.x);
                 int maxx = Math.max(drag_p1.x, drag_p2.x);
@@ -298,9 +303,7 @@ public class TrackGUI extends JPanel {
                     int y = s.getY();
                     if (x >= minx && x <= maxx
                      && y >= miny && y <= maxy) select(s);
-                    // else s.deselect();
                 }
-                // System.out.println(selected);
                 drag_p1 = null;
                 drag_p2 = null;
         }});
@@ -316,9 +319,7 @@ public class TrackGUI extends JPanel {
                     mouse_lastY = lastGridPoint.y;
                     drag_p2 = null;
                 }
-                else {
-                    drag_p2 = e.getPoint();
-                }
+                else drag_p2 = e.getPoint();
                 repaint();
             }
         });
@@ -337,6 +338,31 @@ public class TrackGUI extends JPanel {
         repaint();
     }
 
+    private void formatNotes() {
+        updateRows();
+        int SPREAD_DIST = 4; // how many grid spaces should notes be placed apart
+        int staffXEnd = getWidth() - 100;
+        for (int r = 0; r < rows.size(); r++) {
+            ArrayList<Symbol> row = rows.get(r);
+            if (row.isEmpty()) continue;
+            Symbol prev = row.get(row.size()-1);
+            for (int i = 0; i < row.size(); i++) {
+                Symbol s = row.get(i);
+                if (prev.getX() == s.getX()) continue;
+                int x = prev.getX() + gridSize * SPREAD_DIST;
+                int y = s.getY();
+                if (x > staffXEnd) {
+                    // this row is finished, 
+                    row.remove(i);
+                    rows.get(r + 1).add(0, s);
+                    y += gridHeight * gridSize;
+                }
+                moveSymbol(s, x, y);
+                prev = s;
+            }
+        }
+    }
+
     private Point getGridPoint(int x, int y) {
         Point out = new Point(x, y);
         out.x = (out.x / gridSize) * gridSize;
@@ -348,6 +374,7 @@ public class TrackGUI extends JPanel {
         Symbol symbol = new Symbol(newSym, x, y);
         symbol.resize((int) (symbolSize * newSym.scale));
         add(symbol);
+        calculateMeasureLocations();
     }
 
     private void createNewSymbol(MusicSymbol newSym) {
@@ -358,39 +385,53 @@ public class TrackGUI extends JPanel {
     }
 
     private void moveSymbol(Symbol s, int x, int y) {
-        // System.out.println(dx + ", " + dy + ", " + (s.getX() + dx) + ", " + (s.getY() + dy));
         Point gridPoint = getGridPoint(x, y);
         s.setLocation(gridPoint);
     }
 
-    private void calculateMeasureLocations() {
-        measureLocations.clear(); // clear previous
+    // this should be called after components are done being rearranged
+    private void updateRows() {
+        rows.clear();
         ArrayList<Component> sorted = getComponentsInXOrder();
-        int ticks = 0; // counter to track how long the measure is so far
-        Symbol prev = (Symbol) sorted.get(sorted.size()-1);
-        while (!sorted.isEmpty()) {
-            Symbol s = (Symbol) sorted.remove(0); // grab first symbol
-            if (s.sym.noteDuration == -1) continue; // skip non note symbols
-            if (s.getX() == prev.getX()) continue; // skip stacked notes
-            prev = s;
-            ticks += s.sym.noteDuration;
-            if (ticks > measureLength) break; // early return if a non-valid measure size is found
-            if (ticks == measureLength) {
-                ticks = 0; 
-                int measureLoc = s.getX() + symbolSize; 
-                measureLocations.add(measureLoc);
-                int i = 0;
-                // move symbols that are now within the wrong measure
-                while (i < sorted.size() && sorted.get(i).getX() < measureLoc) 
-                    moveSymbol((Symbol) sorted.get(i), measureLoc, sorted.get(i++).getY());
+        for (Component c : sorted) {
+            Symbol s = (Symbol) c; // grab first symbol
+            int row = s.getY() / (gridHeight * gridSize);
+            while (rows.size() < (row + 2)) rows.add(new ArrayList<Symbol>());
+            rows.get(row).add(s);
+        }
+        // System.out.println(rows);
+        repaint();
+    }
+
+    private void calculateMeasureLocations() {
+        updateRows();
+        measureLocations.clear(); // clear previous
+        int ticks = 0;
+        for (int r = 0; r < rows.size(); r++) {
+            ArrayList<Symbol> row = rows.get(r);
+            if (row.isEmpty()) continue;
+            Symbol prev = row.get(row.size()-1);
+            for (Symbol s : row) {
+                int duration = s.sym.noteDuration;
+                // skip non note symbols, overlapping symbols
+                if (duration == -1 || s.getX() == prev.getX()) continue;
+                prev = s;
+                ticks += duration;
+                // invalid measure state, break early
+                if (ticks > measureLength) return; 
+                // a measure has been completed, add measure location
+                if (ticks == measureLength) {
+                    ticks = 0;
+                    measureLocations.add(new Point(s.getX() + gridSize * 6, r));
+                }
             }
         }
-        repaint();
+        System.out.println(measureLocations);
     }
 
     private ArrayList<Component> getComponentsInXOrder() {
         ArrayList<Component> children = new ArrayList<Component>(Arrays.asList(getComponents()));
-                children.sort(Comparator.comparing(Component::getX));
+        children.sort(Comparator.comparing(Component::getX));
         return children;
     }
 
@@ -404,32 +445,40 @@ public class TrackGUI extends JPanel {
         g2.setRenderingHint(RenderingHints.KEY_STROKE_CONTROL, RenderingHints.VALUE_STROKE_PURE);
         
         // draw staff lines
-        int staffCenter = (gridCenter) * gridSize;
-        // System.out.println(staffCenter);
-        for (int line = -2; line <= 2; line++) {
-            int y = (staffCenter + line * gridSize * 2);
-            g2.drawLine(100, y, getWidth() - 100, y);
+        int staffXStart = 100;
+        int staffXEnd = getWidth() - 100;
+        for (int r = 0; r < rows.size(); r++) {
+            int staffCenter = (r + 1) * ((gridHeight / 2 ) + 1) * gridSize;
+            int gridCenter = (r + 1) * (gridHeight / 2 ) + 1;
+            // System.out.println(staffCenter);
+            for (int line = -2; line <= 2; line++) {
+                int y = (staffCenter + line * gridSize * 2);
+                g2.drawLine(staffXStart, y, staffXEnd, y);
+            }
+            // draw partial lines below notes that outside the staff
+            for (Component c : rows.get(r)) {
+                Symbol s = (Symbol) c;
+                int gridY = (s.getY() + s.getHeight()) / gridSize;
+                // System.out.println(gridC + ", " + gridY);
+                if ((gridY > (gridCenter + 4)) || (gridY < (gridCenter - 4))) {
+                    for (int i = 0; i < Math.abs(gridY - gridCenter) - 3; i += 2) {
+                        int y = (gridCenter + 4 + i) * gridSize; 
+                        if ((gridY - gridCenter) < 0) y = -y; 
+                        g2.drawLine(s.getX(), y, s.getX() + symbolSize / 5, y);
+                    } 
+                }
+            }
+            // draw measure bars
+            // System.out.println(measureLocations);
+        }
+        for (int i = 0; i < measureLocations.size(); i++) {
+            Point m = measureLocations.get(i);
+            int x = Math.min(m.x, staffXEnd);
+            int y = (m.y + 1) * ((gridHeight / 2 ) + 1) * gridSize - 2 * gridSize * 2;
+            g2.drawLine(x, y, x, y + gridSize * 8);
+            g2.drawString(Integer.toString(i), m.x, m.y * (y + 4 * gridSize * 2));
         }
 
-        // draw partial lines below notes that outside the staff
-        for (Component c : getComponents()) {
-            Symbol s = (Symbol) c;
-            int gridY = (s.getY() + s.getHeight()) / gridSize;
-            // System.out.println(gridC + ", " + gridY);
-            if ((gridY > (gridCenter + 4)) || (gridY < (gridCenter - 4))) {
-                for (int i = 0; i < Math.abs(gridY - gridCenter) - 2; i += 2) {
-                    int y = (gridCenter + 4 + i) * gridSize; 
-                    if ((gridY - gridCenter) < 0) y = -y; 
-                    g2.drawLine(s.getX(), y, s.getX() + symbolSize / 5, y);
-                } 
-            }
-        }
-        // draw measure bars
-        for (int i = 0; i < measureLocations.size(); i++) {
-            int m = measureLocations.get(i);
-            g2.drawLine(m, staffCenter - 2 * gridSize * 2, m, staffCenter + 2 * gridSize * 2);
-            g2.drawString(Integer.toString(i), m, staffCenter + 4 * gridSize * 2);
-        }
         // draw mouse drag box
         if (drag_p1 == null || drag_p2 == null) return;
         int minx = Math.min(drag_p1.x, drag_p2.x);

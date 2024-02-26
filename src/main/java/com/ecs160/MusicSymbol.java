@@ -17,6 +17,7 @@ public enum MusicSymbol {
     QUARTER (3, 2, 1, 16),
     EIGHTH (10, 3, 1, 8),
     SIXTEENTH (9, 3, 1, 4);
+    // WHOLE_REST ()
     
     /* These fields are made public so that they can be accessed by other classes, but
      * they are final so that modifications can't be made. The images are references
