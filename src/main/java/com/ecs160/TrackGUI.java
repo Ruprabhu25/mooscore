@@ -15,12 +15,14 @@ import java.util.Comparator;
 class Symbol extends JComponent {
     public final MusicSymbol sym;
     public boolean selected = false;
+    private int symbolWidth = 0;
+    private int symbolHeight = 0;
+    private MusicSymbol accidental = null;
+
     public Symbol(MusicSymbol sym, int x, int y) {
         super();
         this.sym = sym;
         setPreferredSize(new Dimension(sym.width, sym.height)); // Set default size
-        setBackground(Color.BLUE); // Set background color
-        setOpaque(true); // Make sure the background color is visible
         setLocation(x, y);
     }
 
@@ -29,29 +31,30 @@ class Symbol extends JComponent {
         super.paintComponent(g);
         Graphics2D g2 = (Graphics2D) g;
         g2.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
-        g2.setRenderingHint(RenderingHints.KEY_STROKE_CONTROL, RenderingHints.VALUE_STROKE_PURE);
         g2.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BICUBIC);
-        // g2.setRenderingHint(RenderingHints.);
         BufferedImage img;
         if (selected) img = sym.highlightImage;
+        // if (accidental != null) g2.drawImage(accidental.image, getWidth() + 10 )
         else img = sym.image;
-        g2.drawImage(img, 0, 0, getWidth(), getHeight(), null);
+        g2.drawImage(img, 0, 0, symbolWidth, symbolHeight, null);
     }
 
     public void resize(int size) {
         double largest = (double) Math.max(sym.width, sym.height);
-        int w = (int) (size * sym.width / largest);
-        int h = (int) (size * sym.height / largest);
-        setBounds(getX(), getY(), w, h);
+        symbolWidth = (int) (size * sym.width / largest);
+        symbolHeight = (int) (size * sym.height / largest);
+        setBounds(getX(), getY(), symbolWidth, symbolHeight);
+    }
+
+    public void setAccidental(MusicSymbol accidental) {
+        // widen symbol to allow for drawing 
     }
 
     public void select() {
-        // setBorder(BorderFactory.createLineBorder(Color.blue));
         selected = true;
     }
 
     public void deselect() {
-        // setBorder(BorderFactory.createLineBorder(Color.black));
         selected =false;
     }
 }

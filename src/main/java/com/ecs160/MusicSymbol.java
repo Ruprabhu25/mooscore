@@ -11,12 +11,29 @@ import javax.imageio.ImageIO;
 public enum MusicSymbol {
     // TODO: add rests
     BASS (1, 1, 1, 0),
+    REPEAT_END (3, 1, 1, 0),
+    REPEAT_START (4, 1, 1, 0),
+    END_MEASURE_BAR (5, 1, 1, 0),
+    DOUBLE_MEASURE_BAR (7, 1, 1, 0),
     TREBLE (2, 2, 1, 0),
     WHOLE (7, 2, 0.4, 16 * 4),
     HALF (5, 2, 1, 16 * 2),
     QUARTER (3, 2, 1, 16),
     EIGHTH (10, 3, 1, 8),
-    SIXTEENTH (9, 3, 1, 4);
+    SIXTEENTH (9, 3, 1, 4),
+    
+    WHOLE_REST (6, 2, 0.5, -64),
+    HALF_REST (8, 2, 0.5, -32),
+    QUARTER_REST (3, 9, 1, -16),
+    EIGTH_REST (6, 6, 0.5, -8),
+    SIXTEENTH_REST (5, 6, 0.7, -4),
+    DOUBLE_SHARP (1,4,0.7,0),
+    NATURAL (2,4,1,0),
+    DOUBLE_FLAT (3, 4, 1, 0),
+    FLAT (4, 4, 1, 0),
+    QUARTER_NOTE_EQUALS (2, 5, 1, 0),
+    BREATH_MARK (6, 4, 0.5, 0);
+
     // WHOLE_REST ()
     
     /* These fields are made public so that they can be accessed by other classes, but
