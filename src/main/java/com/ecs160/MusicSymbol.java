@@ -10,8 +10,8 @@ import javax.imageio.ImageIO;
 
 public enum MusicSymbol {
     // TODO: add rests
-    BASS (1, 1, 1, -1),
-    TREBLE (2, 2, 1, -1),
+    BASS (1, 1, 1, 0),
+    TREBLE (2, 2, 1, 0),
     WHOLE (7, 2, 0.4, 16 * 4),
     HALF (5, 2, 1, 16 * 2),
     QUARTER (3, 2, 1, 16),
@@ -33,7 +33,7 @@ public enum MusicSymbol {
     double scale; 
     // this is the smallest note possible, a quarter note is RESOLUTION ticks long
     static final int RESOLUTION = 16; 
-    // -1 indicates it is not a playable note, otherwise it is how many RESOLUTION units it is long
+    // 0 indicates it is not a playable note, negative indicates it is a rest
     final int noteDuration; 
     
     private MusicSymbol(int tilex, int tiley, double scale, int duration) {
