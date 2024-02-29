@@ -4,9 +4,6 @@ import javax.sound.midi.Sequence;
 import javax.sound.midi.Track;
 import javax.swing.border.EmptyBorder;
 import javax.swing.*;
-import javax.tools.Tool;
-
-
 import java.awt.*;
 import java.awt.event.*;
 import java.awt.image.BufferedImage;
@@ -14,54 +11,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
 
-class Symbol extends JComponent {
-    public final MusicSymbol sym;
-    public boolean selected = false;
-    private int symbolWidth = 0;
-    private int symbolHeight = 0;
-    private MusicSymbol accidental = null;
 
-    public Symbol(MusicSymbol sym, int x, int y) {
-        super();
-        this.sym = sym;
-        setPreferredSize(new Dimension(sym.width, sym.height)); // Set default size
-        setLocation(x, y);
-    }
-
-    @Override
-    protected void paintComponent(Graphics g) {
-        super.paintComponent(g);
-        Graphics2D g2 = (Graphics2D) g;
-        g2.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
-        g2.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BICUBIC);
-        BufferedImage img;
-        if (selected) img = sym.highlightImage;
-        // if (accidental != null) g2.drawImage(accidental.image, getWidth() + 10 )
-        else img = sym.image;
-        g2.drawImage(img, 0, 0, symbolWidth, symbolHeight, null);
-    }
-
-    public void resize(int size) {
-        double largest = (double) Math.max(sym.width, sym.height);
-        symbolWidth = (int) (size * sym.width / largest);
-        symbolHeight = (int) (size * sym.height / largest);
-        setBounds(getX(), getY(), symbolWidth, symbolHeight);
-    }
-
-    public void setAccidental(MusicSymbol accidental) {
-        // widen symbol to allow for drawing 
-    }
-
-    public void select() {
-        selected = true;
-    }
-
-    public void deselect() {
-        selected =false;
-    }
-}
-
-// can this be a JMenuBar rather than a panel? I think it will be more intuitive. The App example code uses a menu bar
+// TODO:  can this be a JMenuBar rather than a panel? I think it will be more intuitive. The App example code uses a menu bar
 // if you want to see an example 
 class MenuBar extends JPanel {
     private String user_guide_message = 
@@ -160,14 +111,14 @@ class MenuBar extends JPanel {
     }
 }
 
-// this class and the menubar class I think shoudl be defined in their own file, this file is getting very large
+// TODO: this class and the menubar class I think shoudl be defined in their own file, this file is getting very large
 // i also think these control panels should be decoupled from the TrackGUI panel
 class ToolBar extends JPanel {
     public ToolBar(TrackGUI gui) {
         JToolBar toolBar = new JToolBar();
         toolBar.setLayout(new BoxLayout(toolBar, BoxLayout.Y_AXIS));
         
-        // can the width and height of the image icon be set using the w/h of the images themselves? the images should draw
+        // TODO: can the width and height of the image icon be set using the w/h of the images themselves? the images should draw
         // without being stretched to a certain shape 
         JButton sixteenthNoteButton = new JButton(new ImageIcon(MusicSymbol.SIXTEENTH.image.getScaledInstance(15,25,Image.SCALE_SMOOTH)));
         JButton eighthNoteButton = new JButton(new ImageIcon(MusicSymbol.EIGHTH.image.getScaledInstance(15,25,Image.SCALE_SMOOTH)));
@@ -326,7 +277,7 @@ public class TrackGUI extends JPanel {
                 mouse_lastY = e.getY();
                 boolean found = false;
                 for (Component c :  getComponents()) {
-                    if (c instanceof JTextField || c instanceof JLabel)
+                    if (!(c instanceof Symbol))
                         continue;
                     Symbol s = (Symbol) (c);
                     if (s.getBounds().contains(e.getPoint())) {
@@ -356,9 +307,7 @@ public class TrackGUI extends JPanel {
                 int miny = Math.min(drag_p1.y, drag_p2.y);
                 int maxy = Math.max(drag_p1.y, drag_p2.y);
                 Rectangle rect = new Rectangle(minx, miny, maxx- minx, maxy-miny);
-                for (Component c :  getComponents()) {
-                    if (c instanceof JTextField || c instanceof JLabel)
-                        continue;
+                for (Component c :  getComponentsInXOrder()) {
                     if (rect.intersects(c.getBounds())) select((Symbol) c);
                 }
                 drag_p1 = null;
@@ -513,8 +462,6 @@ public class TrackGUI extends JPanel {
         rows.clear();
         ArrayList<Component> sorted = getComponentsInXOrder();
         for (Component c : sorted) {
-            if (c instanceof JTextField || c instanceof JLabel)
-                continue;
             Symbol s = (Symbol) c; // grab first symbol
             int row = s.getY() / (gridHeight * gridSize);
             while (rows.size() < (row + 2)) rows.add(new ArrayList<Symbol>());
@@ -562,6 +509,10 @@ public class TrackGUI extends JPanel {
     private ArrayList<Component> getComponentsInXOrder() {
         ArrayList<Component> children = new ArrayList<Component>(Arrays.asList(getComponents()));
         children.sort(Comparator.comparing(Component::getX));
+        int i = 0;
+        while (i < children.size()) 
+            if (!(children.get(i) instanceof Symbol)) children.remove(i);
+            else i++;
         return children;
     }
 
