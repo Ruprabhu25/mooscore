@@ -2,8 +2,10 @@ package com.ecs160;
 
 import javax.sound.midi.Sequence;
 import javax.sound.midi.Track;
+import javax.swing.border.EmptyBorder;
 import javax.swing.*;
 import javax.tools.Tool;
+
 
 import java.awt.*;
 import java.awt.event.*;
@@ -250,9 +252,24 @@ public class TrackGUI extends JPanel {
     // contains the child components seperated by vertical rows to allow drawing multiple staffs
     private ArrayList<ArrayList<Symbol>> rows; 
     private MusicSymbol activeMusicSymbol;
+
+    private String title = "My Music";
+    private String subtitle = "Sub Title";
+    private JTextField titleField;
+    private JTextField subtitleField;
+    private String composer = "Composer";
+    private JTextField composerField;
+
+    private JLabel tempoQuarter;
+    private int tempo;
+    private JTextField tempoField;
     
     public TrackGUI() {
         setLayout(null); // Use absolute positioning
+
+        addTitlesComposer();
+        addTempo();
+
         measureLocations = new ArrayList<Point>();
         selected = new ArrayList<Symbol>();
         rows = new ArrayList<ArrayList<Symbol>>();
@@ -271,6 +288,8 @@ public class TrackGUI extends JPanel {
                 mouse_lastY = e.getY();
                 boolean found = false;
                 for (Component c :  getComponents()) {
+                    if (c instanceof JTextField || c instanceof JLabel)
+                        continue;
                     Symbol s = (Symbol) (c);
                     if (s.getBounds().contains(e.getPoint())) {
                         found = true;
@@ -299,6 +318,8 @@ public class TrackGUI extends JPanel {
                 int miny = Math.min(drag_p1.y, drag_p2.y);
                 int maxy = Math.max(drag_p1.y, drag_p2.y);
                 for (Component c :  getComponents()) {
+                    if (c instanceof JTextField || c instanceof JLabel)
+                        continue;
                     Symbol s = (Symbol) (c); 
                     int x = s.getX();
                     int y = s.getY();
@@ -324,6 +345,81 @@ public class TrackGUI extends JPanel {
                 repaint();
             }
         });
+    }
+
+    private void addTitlesComposer() {
+        titleField = new JTextField(title);
+        titleField.setFont(new Font("Arial", Font.BOLD, 24));
+        titleField.setBounds(100, 10, 300, 30);
+        titleField.setOpaque(false);
+        titleField.setBorder(new EmptyBorder(5, 10, 5, 10));
+
+        subtitleField = new JTextField(subtitle);
+        subtitleField.setFont(new Font("Arial", Font.ITALIC, 18));
+        subtitleField.setBounds(100, 40, 300, 30);
+        subtitleField.setOpaque(false);
+        subtitleField.setBorder(new EmptyBorder(5, 10, 5, 10));
+
+        composerField = new JTextField(composer);
+        composerField.setFont(new Font("Arial", Font.BOLD, 18));
+        composerField.setBounds(325, 60, 300, 30);
+        composerField.setOpaque(false);
+        composerField.setBorder(new EmptyBorder(5, 10, 5, 10));
+
+        titleField.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                title = titleField.getText();
+                repaint();
+            }
+        });
+
+        subtitleField.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                title = titleField.getText();
+                repaint();
+            }
+        });
+
+        composerField.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                composer = composerField.getText();
+                repaint();
+            }
+        });
+
+        // Add the text field to the panel
+        add(titleField);
+        add(subtitleField);
+        add(composerField);
+    }
+
+    private void addTempo() {
+        //TODO: figure out why equals isn't rendering
+        JLabel equals = new JLabel("=");
+        equals.setBounds(30, 60, equals.getWidth(), equals.getHeight());
+        equals.setFont(new Font("Arial", Font.BOLD, 24));
+        ImageIcon tempoQuarterIcon = new ImageIcon(MusicSymbol.QUARTER.image.getScaledInstance(15,25,Image.SCALE_SMOOTH));
+        tempoQuarter = new JLabel(tempoQuarterIcon);
+        tempoQuarter.setBounds(10, 60, tempoQuarterIcon.getIconWidth(), tempoQuarterIcon.getIconHeight());
+        tempoField = new JTextField("80");
+        tempoField.setFont(new Font("Arial", Font.BOLD, 24));
+        tempoField.setBounds(30, 60, 50, 30);
+        tempoField.setOpaque(false);
+        tempoField.setBorder(new EmptyBorder(5, 10, 5, 10));
+        tempoField.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                tempo = Integer.valueOf(tempoField.getText());
+                repaint();
+            }
+        });
+        add(tempoQuarter);
+        add(equals);
+        add(tempoField);
+        
     }
 
     private void select(Symbol s) {
@@ -400,6 +496,8 @@ public class TrackGUI extends JPanel {
         rows.clear();
         ArrayList<Component> sorted = getComponentsInXOrder();
         for (Component c : sorted) {
+            if (c instanceof JTextField || c instanceof JLabel)
+                continue;
             Symbol s = (Symbol) c; // grab first symbol
             int row = s.getY() / (gridHeight * gridSize);
             while (rows.size() < (row + 2)) rows.add(new ArrayList<Symbol>());
@@ -524,6 +622,9 @@ public class TrackGUI extends JPanel {
 
             // Set the preferred size of the scroll pane (optional)
             scrollPane.setPreferredSize(new Dimension(500, 400));
+
+            JTextField textField = new JTextField("Initial Text");
+            textField.setEditable(true);
 
             // Add the MenuBar and scroll pane to the frame
             frame.add(MenuBar, BorderLayout.NORTH);
