@@ -56,7 +56,6 @@ class Symbol extends JComponent {
     }
 }
 
-
 // can this be a JMenuBar rather than a panel? I think it will be more intuitive. The App example code uses a menu bar
 // if you want to see an example 
 class MenuBar extends JPanel {
@@ -230,11 +229,12 @@ class ToolBar extends JPanel {
 
 public class TrackGUI extends JPanel {
     // The number of pixels between each grid point
-    private int gridSize = 10;
+    private final int gridSize = 10;
     // The number of total grid points top to bottom. 
     // The staff is drawn in the center of this region
-    private int gridHeight = 61;
-    // private int gridCenter = gridHeight / 2 + 1;
+    private final int gridHeight = 26;
+    // number of blank pixels on left and right of staff lines
+    private final int staffBuffer = 100;
     // this is the max dimension of every symbol. for example a quarter note has this height
     private int symbolSize = gridSize * 8;
     // these points define the start and end of the users drag pox
@@ -266,6 +266,7 @@ public class TrackGUI extends JPanel {
         addMouseListener(new MouseAdapter() {
             public void mousePressed(MouseEvent e) {
                 // check against all components to see if they were clicked on
+                System.out.println(e.getX() + ", " + e.getY());
                 moust_lastX = e.getX();
                 mouse_lastY = e.getY();
                 boolean found = false;
@@ -338,28 +339,30 @@ public class TrackGUI extends JPanel {
         repaint();
     }
 
-    private void formatNotes() {
-        updateRows();
-        int SPREAD_DIST = 4; // how many grid spaces should notes be placed apart
-        int staffXEnd = getWidth() - 100;
+    private void fitSymbolsWithinMeasureLocations() {
+        updateRows(); // make sure notes are up to date so far
         for (int r = 0; r < rows.size(); r++) {
             ArrayList<Symbol> row = rows.get(r);
             if (row.isEmpty()) continue;
             Symbol prev = row.get(row.size()-1);
             for (int i = 0; i < row.size(); i++) {
-                Symbol s = row.get(i);
-                if (prev.getX() == s.getX()) continue;
-                int x = prev.getX() + gridSize * SPREAD_DIST;
-                int y = s.getY();
-                if (x > staffXEnd) {
-                    // this row is finished, 
-                    row.remove(i);
-                    rows.get(r + 1).add(0, s);
-                    y += gridHeight * gridSize;
-                }
-                moveSymbol(s, x, y);
-                prev = s;
-            }
+        }
+    }
+    }
+
+    // moves everything in row row upto x_start x_grid to the right
+    private void shiftRight(int row, int x_start, int x_grid) {
+        for (Symbol s : rows.get(row)) {
+            if (s.getX() > x_start) break;
+            moveSymbol(s, s.getX() - x_grid * gridSize, s.getY());
+        }
+    }
+
+    // moves everything in row row after x_start x_grid to the right
+    private void shiftLeft(int row, int x_start, int x_grid) {
+        for (Symbol s : rows.get(row)) {
+            if (s.getX() < x_start) continue;
+            moveSymbol(s, s.getX() + x_grid * gridSize, s.getY());
         }
     }
 
@@ -385,6 +388,9 @@ public class TrackGUI extends JPanel {
     }
 
     private void moveSymbol(Symbol s, int x, int y) {
+        // clamp x coordinates onto staff
+        x = Math.max(staffBuffer, x);
+        x = Math.min(x, getWidth() - 100);
         Point gridPoint = getGridPoint(x, y);
         s.setLocation(gridPoint);
     }
@@ -399,7 +405,8 @@ public class TrackGUI extends JPanel {
             while (rows.size() < (row + 2)) rows.add(new ArrayList<Symbol>());
             rows.get(row).add(s);
         }
-        // System.out.println(rows);
+        for (ArrayList<Symbol> row : rows) System.out.println(row.size());
+        // System.out.println(rows.size());
         repaint();
     }
 
@@ -419,11 +426,10 @@ public class TrackGUI extends JPanel {
                 ticks += duration;
                 // invalid measure state, break early
                 if (ticks > measureLength) return; 
+                if (ticks < measureLength) continue;
                 // a measure has been completed, add measure location
-                if (ticks == measureLength) {
-                    ticks = 0;
-                    measureLocations.add(new Point(s.getX() + gridSize * 6, r));
-                }
+                ticks = 0;
+                measureLocations.add(new Point(s.getX() + gridSize * 6, r));
             }
         }
         System.out.println(measureLocations);
@@ -448,11 +454,12 @@ public class TrackGUI extends JPanel {
         int staffXStart = 100;
         int staffXEnd = getWidth() - 100;
         for (int r = 0; r < rows.size(); r++) {
-            int staffCenter = (r + 1) * ((gridHeight / 2 ) + 1) * gridSize;
-            int gridCenter = (r + 1) * (gridHeight / 2 ) + 1;
+            int gridCenter = ((r) * (gridHeight) + ((gridHeight / 2) + 1));
+            int staffCenter = gridCenter * gridSize;
             // System.out.println(staffCenter);
+            // System.out.println(gridHeight * gridSize);
             for (int line = -2; line <= 2; line++) {
-                int y = (staffCenter + line * gridSize * 2);
+                int y = staffCenter + line * gridSize * 2;
                 g2.drawLine(staffXStart, y, staffXEnd, y);
             }
             // draw partial lines below notes that outside the staff
@@ -469,14 +476,13 @@ public class TrackGUI extends JPanel {
                 }
             }
             // draw measure bars
-            // System.out.println(measureLocations);
         }
         for (int i = 0; i < measureLocations.size(); i++) {
             Point m = measureLocations.get(i);
             int x = Math.min(m.x, staffXEnd);
             int y = (m.y + 1) * ((gridHeight / 2 ) + 1) * gridSize - 2 * gridSize * 2;
             g2.drawLine(x, y, x, y + gridSize * 8);
-            g2.drawString(Integer.toString(i), m.x, m.y * (y + 4 * gridSize * 2));
+            g2.drawString(Integer.toString(i + 1), m.x - gridSize, (y + 5 * gridSize * 2));
         }
 
         // draw mouse drag box
