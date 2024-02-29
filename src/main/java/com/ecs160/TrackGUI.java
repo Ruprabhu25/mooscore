@@ -220,8 +220,6 @@ public class TrackGUI extends JPanel {
     
     public TrackGUI() {
         setLayout(null); // Use absolute positioning
-
-        addTitlesComposer();
         addTempo();
 
         measureLocations = new ArrayList<Point>();
@@ -334,19 +332,19 @@ public class TrackGUI extends JPanel {
     private void addTitlesComposer() {
         titleField = new JTextField(title);
         titleField.setFont(new Font("Arial", Font.BOLD, 24));
-        titleField.setBounds(100, 10, 300, 30);
+        titleField.setBounds(getWidth() / 2, 10, 300, 30);
         titleField.setOpaque(false);
         titleField.setBorder(new EmptyBorder(5, 10, 5, 10));
 
         subtitleField = new JTextField(subtitle);
         subtitleField.setFont(new Font("Arial", Font.ITALIC, 18));
-        subtitleField.setBounds(100, 40, 300, 30);
+        subtitleField.setBounds(getWidth() / 2, 40, 300, 30);
         subtitleField.setOpaque(false);
         subtitleField.setBorder(new EmptyBorder(5, 10, 5, 10));
 
         composerField = new JTextField(composer);
         composerField.setFont(new Font("Arial", Font.BOLD, 18));
-        composerField.setBounds(325, 60, 300, 30);
+        composerField.setBounds(getWidth() - 200, 60, 300, 30);
         composerField.setOpaque(false);
         composerField.setBorder(new EmptyBorder(5, 10, 5, 10));
 
@@ -381,16 +379,12 @@ public class TrackGUI extends JPanel {
     }
 
     private void addTempo() {
-        //TODO: figure out why equals isn't rendering
-        JLabel equals = new JLabel("=");
-        equals.setBounds(30, 60, equals.getWidth(), equals.getHeight());
-        equals.setFont(new Font("Arial", Font.BOLD, 24));
-        ImageIcon tempoQuarterIcon = new ImageIcon(MusicSymbol.QUARTER.image.getScaledInstance(15,25,Image.SCALE_SMOOTH));
+        ImageIcon tempoQuarterIcon = new ImageIcon(MusicSymbol.QUARTER_NOTE_EQUALS.image.getScaledInstance(20,33,Image.SCALE_SMOOTH));
         tempoQuarter = new JLabel(tempoQuarterIcon);
         tempoQuarter.setBounds(10, 60, tempoQuarterIcon.getIconWidth(), tempoQuarterIcon.getIconHeight());
         tempoField = new JTextField("80");
         tempoField.setFont(new Font("Arial", Font.BOLD, 24));
-        tempoField.setBounds(30, 60, 50, 30);
+        tempoField.setBounds(30, 70, 50, 30);
         tempoField.setOpaque(false);
         tempoField.setBorder(new EmptyBorder(5, 10, 5, 10));
         tempoField.addActionListener(new ActionListener() {
@@ -401,7 +395,6 @@ public class TrackGUI extends JPanel {
             }
         });
         add(tempoQuarter);
-        add(equals);
         add(tempoField);
         
     }
@@ -613,6 +606,8 @@ public class TrackGUI extends JPanel {
             frame.add(ToolBar, BorderLayout.WEST);
             frame.add(scrollPane, BorderLayout.CENTER);
             frame.setVisible(true);
+
+            TrackPanel.addTitlesComposer();
         });
     }
 }
