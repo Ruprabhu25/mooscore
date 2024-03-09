@@ -1,12 +1,10 @@
 package com.ecs160;
 
-import javax.sound.midi.Sequence;
-import javax.sound.midi.Track;
+import javax.sound.midi.*;
 import javax.swing.border.EmptyBorder;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
-import java.awt.image.BufferedImage;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
@@ -235,11 +233,8 @@ public class TrackGUI extends JPanel {
         KeyboardFocusManager.getCurrentKeyboardFocusManager().addKeyEventDispatcher(new KeyEventDispatcher() {
             @Override
             public boolean dispatchKeyEvent(KeyEvent e) {
-                // Handle key events for panel1
-                // Example: move panel1 when arrow keys are pressed
-                int keyCode = e.getKeyCode();
-                if (e.getID() == KeyEvent.KEY_RELEASED) return false;
-                // System.out.println(e.getID());
+                // only handle key presses and holds, ignore when the key is released
+                if (e.getID() != KeyEvent.KEY_PRESSED) return false;
                 int dx = 0; 
                 int dy = 0;
                 switch (e.getKeyCode()) {
@@ -259,6 +254,13 @@ public class TrackGUI extends JPanel {
                     case KeyEvent.VK_S:
                         dy = gridSize;
                         break;
+                    case KeyEvent.VK_BACK_SPACE:
+                    case KeyEvent.VK_DELETE:
+                        // delete selected components
+                        for (Symbol s: selected) remove(s);
+                        break;
+                    default: 
+                        clearSelection();
                 }
                 for (Symbol s : selected) 
                     moveSymbol(s, s.getX() + dx, s.getY() + dy);
@@ -269,30 +271,48 @@ public class TrackGUI extends JPanel {
 
         addMouseListener(new MouseAdapter() {
             public void mousePressed(MouseEvent e) {
-                // check against all components to see if they were clicked on
+                drag_p1 = e.getPoint();
+                
                 System.out.println(e.getX() + ", " + e.getY());
                 moust_lastX = e.getX();
                 mouse_lastY = e.getY();
+                // check if shift is held
+                boolean shift_down = (e.getModifiersEx() & MouseEvent.SHIFT_DOWN_MASK) == MouseEvent.SHIFT_DOWN_MASK;
                 boolean found = false;
+                
+                // check against all components to see if they were clicked on
                 for (Component c :  getComponents()) {
-                    if (!(c instanceof Symbol))
+                    if (!(c instanceof Symbol)) // only care about symbols
                         continue;
                     Symbol s = (Symbol) (c);
+                    // clicked on a symbol
                     if (s.getBounds().contains(e.getPoint())) {
                         found = true;
+                        // already selected, no need to do anything
+                        if (selected.contains(s)) continue;
+                        // if shift is not held, clear previous selection
+                        if (!shift_down) clearSelection();
                         // if nothing is selected yet, select this
-                        if (selected.isEmpty()) select(s);
-                        // if something else was selected, clear the selections then select this
-                        else if (!selected.contains(s)) {
-                            clearSelection();
-                            select(s);
-                        }
+                        select(s);
                     }
                 }
+                requestFocusInWindow();
+                // clicked on a component
+                if (found) {
+                    activeMusicSymbol = null;
+                    repaint();
+                    return;
+                }
                 // clicked on empty space, deselect everything
-                if (!found) clearSelection();
+                clearSelection();
+                // check if drawing new symbol
+                if (activeMusicSymbol != null) {
+                    createNewSymbol(activeMusicSymbol, e.getX(), e.getY());
+                    if (!shift_down)
+                        activeMusicSymbol = null;
+                }
+
                 // set point to allow for drag boxing
-                drag_p1 = e.getPoint();
                 repaint();
             }
             
@@ -348,29 +368,29 @@ public class TrackGUI extends JPanel {
         composerField.setOpaque(false);
         composerField.setBorder(new EmptyBorder(5, 10, 5, 10));
 
-        titleField.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                title = titleField.getText();
-                repaint();
-            }
-        });
+        // titleField.addActionListener(new ActionListener() {
+        //     @Override
+        //     public void actionPerformed(ActionEvent e) {
+        //         title = titleField.getText();
+        //         repaint();
+        //     }
+        // });
 
-        subtitleField.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                title = titleField.getText();
-                repaint();
-            }
-        });
+        // subtitleField.addActionListener(new ActionListener() {
+        //     @Override
+        //     public void actionPerformed(ActionEvent e) {
+        //         title = titleField.getText();
+        //         repaint();
+        //     }
+        // });
 
-        composerField.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                composer = composerField.getText();
-                repaint();
-            }
-        });
+        // composerField.addActionListener(new ActionListener() {
+        //     @Override
+        //     public void actionPerformed(ActionEvent e) {
+        //         composer = composerField.getText();
+        //         repaint();
+        //     }
+        // });
 
         // Add the text field to the panel
         add(titleField);
@@ -400,6 +420,8 @@ public class TrackGUI extends JPanel {
     }
 
     private void select(Symbol s) {
+        // make sure the same symbol is not selected twice
+        if (selected.contains(s)) return;
         selected.add(s);
         s.select();
         repaint();
@@ -431,6 +453,9 @@ public class TrackGUI extends JPanel {
     private void createNewSymbol(MusicSymbol newSym, int x, int y) {
         Symbol symbol = new Symbol(newSym, x, y);
         symbol.resize((int) (symbolSize * newSym.scale));
+        // make sure x and y are within bounds
+        x = Math.max(x, 100);
+        x = Math.min(x, getWidth() - 100);
         add(symbol);
         calculateMeasureLocations();
     }
@@ -456,7 +481,7 @@ public class TrackGUI extends JPanel {
         ArrayList<Component> sorted = getComponentsInXOrder();
         for (Component c : sorted) {
             Symbol s = (Symbol) c; // grab first symbol
-            int row = s.getY() / (gridHeight * gridSize);
+            int row = s.getBottomY() / (gridHeight * gridSize);
             while (rows.size() < (row + 2)) rows.add(new ArrayList<Symbol>());
             rows.get(row).add(s);
         }
@@ -528,21 +553,30 @@ public class TrackGUI extends JPanel {
                 int y = staffCenter + line * gridSize * 2;
                 g2.drawLine(staffXStart, y, staffXEnd, y);
             }
-            // draw partial lines below notes that outside the staff
+
+            // draw partial lines below notes that are outside the staff
             for (Component c : rows.get(r)) {
                 Symbol s = (Symbol) c;
-                int gridY = (s.getY() + s.getHeight()) / gridSize;
-                // System.out.println(gridC + ", " + gridY);
-                if ((gridY > (gridCenter + 4)) || (gridY < (gridCenter - 4))) {
-                    for (int i = 0; i < Math.abs(gridY - gridCenter) - 3; i += 2) {
-                        int y = (gridCenter + 4 + i) * gridSize; 
-                        if ((gridY - gridCenter) < 0) y = -y; 
-                        g2.drawLine(s.getX(), y, s.getX() + symbolSize / 5, y);
-                    } 
+                int gridY = s.getBottomY() / gridSize;
+                int lineStart, lineEnd;
+                if (gridY > (gridCenter + 4)) {
+                    lineStart = gridCenter + 4;
+                    lineEnd = ((gridY + 1) / 2) * 2;
+                }
+                else if (gridY < (gridCenter - 4)) {
+                    lineStart = (gridY / 2) * 2;
+                    lineEnd = gridCenter - 4;
+                }
+                else continue;
+                System.out.println(lineStart + ", " + lineEnd);
+                for (int i = 0; (lineStart + i) < lineEnd; i += 2) {
+                    int y = (lineStart + i) * gridSize; 
+                    g2.drawLine(s.getX(), y, s.getX() + symbolSize / 5, y);
                 }
             }
-            // draw measure bars
         }
+
+        // draw measure bars
         for (int i = 0; i < measureLocations.size(); i++) {
             Point m = measureLocations.get(i);
             int x = Math.min(m.x, staffXEnd);
@@ -552,20 +586,49 @@ public class TrackGUI extends JPanel {
         }
 
         // draw mouse drag box
-        if (drag_p1 == null || drag_p2 == null) return;
+        Rectangle mouseBox = getMouseDragBox();
+        if (mouseBox == null) return;
+        g2.setColor(new Color(93, 164, 227, 128));
+        g2.fill(mouseBox);
+    }
+
+    private Rectangle getMouseDragBox() {
+        if (drag_p1 == null || drag_p2 == null) return null;
         int minx = Math.min(drag_p1.x, drag_p2.x);
         int maxx = Math.max(drag_p1.x, drag_p2.x);
         int miny = Math.min(drag_p1.y, drag_p2.y);
         int maxy = Math.max(drag_p1.y, drag_p2.y);
-        g2.setColor(Color.BLUE);
-        g2.drawRect(minx, miny, maxx - minx, maxy - miny);
+        return new Rectangle(minx, miny, maxx - minx, maxy - miny);
     }
 
     public Track getMidiTrack(Sequence sequence) {
         Track track = sequence.createTrack();
-        ArrayList<Component> sorted = getComponentsInXOrder();
-                return track;
+        // ArrayList<Component> sorted = getComponentsInXOrder();
+        int cur_tick = 0;
+        int channel = 0;
+        int velocity = 100;
+        for (ArrayList<Symbol> row : rows) {
+            for (Symbol s : row) {
+                // symbol is a rest
+                if (s.sym.noteDuration < 0) cur_tick += Math.abs(s.sym.noteDuration);
+                // symbol is a note 
+                elif (s.sym.noteDuration > 0) {
+                    int pitch 
+                    track.add(createNoteOnEvent(channel, ));
+                }
+            }
+        }
+        
+        return track;
     } 
+
+    public int getNotePitch(Symbol s) {
+        // get pitch from notes y location
+        int vertical_position = (s.getY() / gridSize) % (gridHeight * gridSize);
+        // the center of the staff should be C = 60
+        int distance_from_center = (vertical_position - gridHeight / 2);
+        return 60 + distance_from_center;
+    }
 
     public void setActiveNote(MusicSymbol note) {
         this.activeMusicSymbol = note;

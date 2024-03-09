@@ -44,6 +44,9 @@ class Symbol extends JComponent {
         // widen symbol to allow for drawing 
     }
 
+    public int getBottomY() {
+        return getY() + getHeight();
+    }
     public void select() {
         selected = true;
     }
