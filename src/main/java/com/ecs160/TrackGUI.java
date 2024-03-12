@@ -109,79 +109,39 @@ class MenuBar extends JPanel {
     }
 }
 
-// TODO: this class and the menubar class I think shoudl be defined in their own file, this file is getting very large
-// i also think these control panels should be decoupled from the TrackGUI panel
 class ToolBar extends JPanel {
+    // private void addAccidentalButton(MusicSymbol sym, JToolBar toolBar)
+    
+    private void addSymbolButton(MusicSymbol sym, JToolBar toolBar, TrackGUI gui) {
+        int image_size = 50;
+        JButton button = new JButton(new ImageIcon(MusicSymbol.getScaledImage(sym, image_size)));
+        toolBar.add(button);
+        button.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                gui.setActiveNote(sym);
+            }
+        });
+    }
+
     public ToolBar(TrackGUI gui) {
         JToolBar toolBar = new JToolBar();
         toolBar.setLayout(new BoxLayout(toolBar, BoxLayout.Y_AXIS));
         
         // TODO: can the width and height of the image icon be set using the w/h of the images themselves? the images should draw
         // without being stretched to a certain shape
-        int img_size = 25;
-        JButton sixteenthNoteButton = new JButton(new ImageIcon(MusicSymbol.getScaledImage(MusicSymbol.SIXTEENTH, img_size)));
-        JButton eighthNoteButton = new JButton(new ImageIcon(MusicSymbol.getScaledImage(MusicSymbol.EIGHTH, img_size)));
-        JButton quarterNoteButton = new JButton(new ImageIcon(MusicSymbol.getScaledImage(MusicSymbol.QUARTER, img_size)));
-        JButton halfNoteButton = new JButton(new ImageIcon(MusicSymbol.getScaledImage(MusicSymbol.HALF, img_size)));
-        JButton wholeNoteButton = new JButton(new ImageIcon(MusicSymbol.getScaledImage(MusicSymbol.WHOLE, img_size)));
+        // add buttons
+        addSymbolButton(MusicSymbol.SIXTEENTH, toolBar, gui);
+        addSymbolButton(MusicSymbol.EIGHTH, toolBar, gui);
+        addSymbolButton(MusicSymbol.QUARTER, toolBar, gui);
+        addSymbolButton(MusicSymbol.HALF, toolBar, gui);
+        addSymbolButton(MusicSymbol.WHOLE, toolBar, gui);
 
-        // you could create the missing rest enums if you want, just need to define their constructor in MusicSymbol
-        // i was thinking of naming them like #NOTE#_REST?
-        JButton sixteenthRestButton = new JButton(new ImageIcon(MusicSymbol.getScaledImage(MusicSymbol.SIXTEENTH_REST, img_size)));
-        JButton eighthRestButton = new JButton(new ImageIcon(MusicSymbol.getScaledImage(MusicSymbol.EIGTH_REST, img_size)));
-        JButton quarterRestButton = new JButton(new ImageIcon(MusicSymbol.getScaledImage(MusicSymbol.QUARTER_REST, img_size)));
-        JButton halfRestButton = new JButton(new ImageIcon(MusicSymbol.getScaledImage(MusicSymbol.HALF_REST, img_size)));
-        JButton wholeRestButton = new JButton(new ImageIcon(MusicSymbol.getScaledImage(MusicSymbol.WHOLE_REST, img_size)));
-
-        toolBar.add(sixteenthNoteButton);
-        toolBar.add(eighthNoteButton);
-        toolBar.add(quarterNoteButton);
-        toolBar.add(halfNoteButton);
-        toolBar.add(wholeNoteButton);
-        
-        toolBar.add(sixteenthRestButton);
-        toolBar.add(eighthRestButton);
-        toolBar.add(quarterRestButton);
-        toolBar.add(halfRestButton);
-        toolBar.add(wholeRestButton);
-
-        //TODO: add rest buttons (need images)
-
-        //add event listeners for current active notes
-        sixteenthNoteButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                gui.setActiveNote(MusicSymbol.SIXTEENTH);
-            }
-        });
-
-        eighthNoteButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                gui.setActiveNote(MusicSymbol.EIGHTH);
-            }
-        });
-
-        quarterNoteButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                gui.setActiveNote(MusicSymbol.QUARTER);
-            }
-        });
-
-        halfNoteButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                gui.setActiveNote(MusicSymbol.HALF);
-            }
-        });
-
-        wholeNoteButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                gui.setActiveNote(MusicSymbol.WHOLE);
-            }
-        });
+        addSymbolButton(MusicSymbol.SIXTEENTH_REST, toolBar, gui);
+        addSymbolButton(MusicSymbol.EIGTH_REST, toolBar, gui);
+        addSymbolButton(MusicSymbol.QUARTER_REST, toolBar, gui);
+        addSymbolButton(MusicSymbol.HALF_REST, toolBar, gui);
+        addSymbolButton(MusicSymbol.WHOLE_REST, toolBar, gui);
 
         setLayout(new BorderLayout());
         add(toolBar, BorderLayout.NORTH);
@@ -704,4 +664,3 @@ public class TrackGUI extends JPanel {
         });
     }
 }
- 
