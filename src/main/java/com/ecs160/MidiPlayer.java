@@ -1,9 +1,53 @@
 package com.ecs160;
 
 import javax.sound.midi.*;
+import javax.swing.JButton;
+import javax.swing.JFrame;
+import javax.swing.JPanel;
+import javax.swing.JSlider;
+import javax.swing.*;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
+import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 
-public class MidiPlayer {
+public class MidiPlayer extends JFrame {
+    private Sequencer sequencer;
+    private JButton playButton;
+    private JSlider positionSlider;
 
+    public MidiPlayer() {
+        super("MIDI Player");
+
+        // Initialize sequencer
+        try {
+            sequencer = MidiSystem.getSequencer();
+            sequencer.open();
+        } catch (MidiUnavailableException e) {
+            e.printStackTrace();
+        }
+
+        // Create GUI components
+        playButton = new JButton("Play");
+        playButton.addActionListener(new PlayButtonListener());
+
+        positionSlider = new JSlider(JSlider.HORIZONTAL, 0, 100, 0); // Slider for position, from 0 to 100
+        positionSlider.addChangeListener(new PositionSliderListener());
+
+        // Add components to the frame
+        JPanel controlPanel = new JPanel(new BorderLayout());
+        controlPanel.add(playButton, BorderLayout.NORTH);
+        controlPanel.add(positionSlider, BorderLayout.CENTER);
+        add(controlPanel, BorderLayout.CENTER);
+
+        setSize(300, 150);
+        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        setLocationRelativeTo(null);
+        setVisible(true);
+    }
+
+    
     public static void buildAndPlaySequence() {
         try {
             // Obtain a Sequencer instance
@@ -57,5 +101,35 @@ public class MidiPlayer {
     public static void main(String[] args) {
         buildAndPlaySequence();
     }
+    
+    class PlayButtonListener implements ActionListener {
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            if (sequencer.isRunning()) {
+                sequencer.stop();
+                playButton.setText("Play");
+            } else {
+                try {
+                    sequencer.setSequence(/* Provide your MIDI sequence here */);
+                    sequencer.start();
+                    playButton.setText("Stop");
+                } catch (InvalidMidiDataException | MidiUnavailableException ex) {
+                    ex.printStackTrace();
+                }
+            }
+        }
+    }
+
+    class PositionSliderListener implements ChangeListener {
+        @Override
+        public void stateChanged(ChangeEvent e) {
+            if (!positionSlider.getValueIsAdjusting()) {
+                long position = (long) (sequencer.getMicrosecondLength() * (positionSlider.getValue() / 100.0));
+                sequencer.setMicrosecondPosition(position);
+            }
+        }
+    }
 }
+
+
 
