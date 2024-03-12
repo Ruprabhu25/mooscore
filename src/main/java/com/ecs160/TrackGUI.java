@@ -117,26 +117,33 @@ class ToolBar extends JPanel {
         toolBar.setLayout(new BoxLayout(toolBar, BoxLayout.Y_AXIS));
         
         // TODO: can the width and height of the image icon be set using the w/h of the images themselves? the images should draw
-        // without being stretched to a certain shape 
-        JButton sixteenthNoteButton = new JButton(new ImageIcon(MusicSymbol.SIXTEENTH.image.getScaledInstance(15,25,Image.SCALE_SMOOTH)));
-        JButton eighthNoteButton = new JButton(new ImageIcon(MusicSymbol.EIGHTH.image.getScaledInstance(15,25,Image.SCALE_SMOOTH)));
-        JButton quarterNoteButton = new JButton(new ImageIcon(MusicSymbol.QUARTER.image.getScaledInstance(15,25,Image.SCALE_SMOOTH)));
-        JButton halfNoteButton = new JButton(new ImageIcon(MusicSymbol.HALF.image.getScaledInstance(15,25,Image.SCALE_SMOOTH)));
-        JButton wholeNoteButton = new JButton(new ImageIcon(MusicSymbol.WHOLE.image.getScaledInstance(18,15,Image.SCALE_SMOOTH)));
+        // without being stretched to a certain shape
+        int img_size = 25;
+        JButton sixteenthNoteButton = new JButton(new ImageIcon(MusicSymbol.getScaledImage(MusicSymbol.SIXTEENTH, img_size)));
+        JButton eighthNoteButton = new JButton(new ImageIcon(MusicSymbol.getScaledImage(MusicSymbol.EIGHTH, img_size)));
+        JButton quarterNoteButton = new JButton(new ImageIcon(MusicSymbol.getScaledImage(MusicSymbol.QUARTER, img_size)));
+        JButton halfNoteButton = new JButton(new ImageIcon(MusicSymbol.getScaledImage(MusicSymbol.HALF, img_size)));
+        JButton wholeNoteButton = new JButton(new ImageIcon(MusicSymbol.getScaledImage(MusicSymbol.WHOLE, img_size)));
 
         // you could create the missing rest enums if you want, just need to define their constructor in MusicSymbol
         // i was thinking of naming them like #NOTE#_REST?
-        JButton sixteenthRestButton = new JButton();
-        JButton eighthRestButton = new JButton();
-        JButton quarterRestButton = new JButton();
-        JButton halfRestButton = new JButton();
-        JButton wholeRestButton = new JButton();
+        JButton sixteenthRestButton = new JButton(new ImageIcon(MusicSymbol.getScaledImage(MusicSymbol.SIXTEENTH_REST, img_size)));
+        JButton eighthRestButton = new JButton(new ImageIcon(MusicSymbol.getScaledImage(MusicSymbol.EIGTH_REST, img_size)));
+        JButton quarterRestButton = new JButton(new ImageIcon(MusicSymbol.getScaledImage(MusicSymbol.QUARTER_REST, img_size)));
+        JButton halfRestButton = new JButton(new ImageIcon(MusicSymbol.getScaledImage(MusicSymbol.HALF_REST, img_size)));
+        JButton wholeRestButton = new JButton(new ImageIcon(MusicSymbol.getScaledImage(MusicSymbol.WHOLE_REST, img_size)));
 
         toolBar.add(sixteenthNoteButton);
         toolBar.add(eighthNoteButton);
         toolBar.add(quarterNoteButton);
         toolBar.add(halfNoteButton);
         toolBar.add(wholeNoteButton);
+        
+        toolBar.add(sixteenthRestButton);
+        toolBar.add(eighthRestButton);
+        toolBar.add(quarterRestButton);
+        toolBar.add(halfRestButton);
+        toolBar.add(wholeRestButton);
 
         //TODO: add rest buttons (need images)
 
@@ -194,7 +201,7 @@ public class TrackGUI extends JPanel {
     // these points define the start and end of the users drag pox
     private Point drag_p1, drag_p2;
     // these are used for measuring movement while dragging components
-    private int moust_lastX, mouse_lastY;
+    private int last_clickX, last_clickY, mouseX, mouseY;
     // measure length in quarter notes. this reflects the meter of the track
     private int measureLength = MusicSymbol.RESOLUTION * 4; 
     // the X coordinates of measure bars
@@ -256,8 +263,12 @@ public class TrackGUI extends JPanel {
                         break;
                     case KeyEvent.VK_BACK_SPACE:
                     case KeyEvent.VK_DELETE:
+                        activeMusicSymbol = null; // clear active note
                         // delete selected components
                         for (Symbol s: selected) remove(s);
+                        break;
+                    case KeyEvent.VK_ESCAPE:
+                        activeMusicSymbol = null; // clear active note
                         break;
                     default: 
                         clearSelection();
@@ -270,12 +281,13 @@ public class TrackGUI extends JPanel {
         });
 
         addMouseListener(new MouseAdapter() {
+            @Override
             public void mousePressed(MouseEvent e) {
                 drag_p1 = e.getPoint();
                 
                 System.out.println(e.getX() + ", " + e.getY());
-                moust_lastX = e.getX();
-                mouse_lastY = e.getY();
+                last_clickX = e.getX();
+                last_clickY = e.getY();
                 // check if shift is held
                 boolean shift_down = (e.getModifiersEx() & MouseEvent.SHIFT_DOWN_MASK) == MouseEvent.SHIFT_DOWN_MASK;
                 boolean found = false;
@@ -303,11 +315,13 @@ public class TrackGUI extends JPanel {
                     repaint();
                     return;
                 }
+
                 // clicked on empty space, deselect everything
                 clearSelection();
+                
                 // check if drawing new symbol
                 if (activeMusicSymbol != null) {
-                    createNewSymbol(activeMusicSymbol, e.getX(), e.getY());
+                    createNewSymbol(activeMusicSymbol, e.getX(), e.getY() - symbolSize);
                     if (!shift_down)
                         activeMusicSymbol = null;
                 }
@@ -316,6 +330,7 @@ public class TrackGUI extends JPanel {
                 repaint();
             }
             
+            @Override
             public void mouseReleased(MouseEvent e) {
                 // done dragging, reset information
                 calculateMeasureLocations(); 
@@ -333,17 +348,25 @@ public class TrackGUI extends JPanel {
         }});
         
         addMouseMotionListener(new MouseMotionAdapter() {
+            @Override
             public void mouseDragged(MouseEvent e) {
                 if (!selected.isEmpty()) {
-                    int dx = e.getX() - moust_lastX;
-                    int dy = e.getY() - mouse_lastY;
+                    int dx = e.getX() - last_clickX;
+                    int dy = e.getY() - last_clickY;
                     for (Symbol s : selected) moveSymbol(s, s.getX() + dx, s.getY() + dy);
-                    Point lastGridPoint = getGridPoint(moust_lastX + dx, mouse_lastY + dy);
-                    moust_lastX = lastGridPoint.x;
-                    mouse_lastY = lastGridPoint.y;
+                    Point lastGridPoint = getGridPoint(last_clickX + dx, last_clickY + dy);
+                    last_clickX = lastGridPoint.x;
+                    last_clickY = lastGridPoint.y;
                     drag_p2 = null;
                 }
                 else drag_p2 = e.getPoint();
+                repaint();
+            }
+            
+            @Override
+            public void mouseMoved(MouseEvent e) {
+                mouseX = e.getX();
+                mouseY = e.getY();
                 repaint();
             }
         });
@@ -451,11 +474,11 @@ public class TrackGUI extends JPanel {
     }
 
     private void createNewSymbol(MusicSymbol newSym, int x, int y) {
-        Symbol symbol = new Symbol(newSym, x, y);
+        // align symbol to grid
+        Point grid_point = getGridPoint(x, y);
+        System.out.println(grid_point);
+        Symbol symbol = new Symbol(newSym, grid_point.x, grid_point.y);
         symbol.resize((int) (symbolSize * newSym.scale));
-        // make sure x and y are within bounds
-        x = Math.max(x, 100);
-        x = Math.min(x, getWidth() - 100);
         add(symbol);
         calculateMeasureLocations();
     }
@@ -568,10 +591,10 @@ public class TrackGUI extends JPanel {
                     lineEnd = gridCenter - 4;
                 }
                 else continue;
-                System.out.println(lineStart + ", " + lineEnd);
+                // System.out.println(lineStart + ", " + lineEnd);
                 for (int i = 0; (lineStart + i) < lineEnd; i += 2) {
                     int y = (lineStart + i) * gridSize; 
-                    g2.drawLine(s.getX(), y, s.getX() + symbolSize / 5, y);
+                    g2.drawLine(s.getX() + 3, y, s.getX() + symbolSize / 5, y);
                 }
             }
         }
@@ -587,9 +610,15 @@ public class TrackGUI extends JPanel {
 
         // draw mouse drag box
         Rectangle mouseBox = getMouseDragBox();
-        if (mouseBox == null) return;
-        g2.setColor(new Color(93, 164, 227, 128));
-        g2.fill(mouseBox);
+        if (mouseBox != null) {
+            g2.setColor(new Color(93, 164, 227, 128));
+            g2.fill(mouseBox);
+        }
+
+        // draw active note if applicable
+        if (activeMusicSymbol != null) 
+            g2.drawImage(MusicSymbol.getScaledImage(activeMusicSymbol, symbolSize,true), 
+            mouseX, mouseY - (int) (symbolSize * activeMusicSymbol.scale), null);
     }
 
     private Rectangle getMouseDragBox() {
@@ -609,12 +638,13 @@ public class TrackGUI extends JPanel {
         int velocity = 100;
         for (ArrayList<Symbol> row : rows) {
             for (Symbol s : row) {
-                // symbol is a rest
-                if (s.sym.noteDuration < 0) cur_tick += Math.abs(s.sym.noteDuration);
+                // symbol is a note or rest
+                if (s.sym.noteDuration != 0) cur_tick += Math.abs(s.sym.noteDuration);
                 // symbol is a note 
-                elif (s.sym.noteDuration > 0) {
-                    int pitch 
-                    track.add(createNoteOnEvent(channel, ));
+                if (s.sym.noteDuration > 0) {
+                    int pitch = getNotePitch(s);
+                    MidiPlayer.addNote(track, channel, pitch, 
+                    velocity, s.sym.noteDuration, cur_tick);
                 }
             }
         }

@@ -18,18 +18,26 @@ public class MidiPlayer {
 
             // Add some notes to the track (example: C major scale)
             int channel = 0;
-            int velocity = 100;
+            int velocity = 50;
             int noteDuration = 4; // quarter note duration in ticks
 
-            for (int i = 60; i <= 72; i += 3) { // C major scale from middle C (MIDI note 60)
-                track.add(createNoteOnEvent(channel, i, velocity, 0)); // Note on
-                track.add(createNoteOffEvent(channel, i, 0 + noteDuration)); // Note off
+            for (int i = 60; i <= 72; i += 1) { // C major scale from middle C (MIDI note 60)
+                addNote(track, channel, i, velocity + i * 10, noteDuration, i * 4 * 2);
             }
-
             // Set the sequence to the sequencer and start playing
             sequencer.setSequence(sequence);
             sequencer.start();
         } catch (MidiUnavailableException | InvalidMidiDataException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public static void addNote(Track track, int channel, int pitch, int velocity, int duration, int start_tick) {
+        try {
+            track.add(createNoteOnEvent(channel, pitch, velocity, start_tick));
+            track.add(createNoteOffEvent(channel, pitch, start_tick + duration));
+        } catch (InvalidMidiDataException e) {
+            // TODO Auto-generated catch block
             e.printStackTrace();
         }
     }

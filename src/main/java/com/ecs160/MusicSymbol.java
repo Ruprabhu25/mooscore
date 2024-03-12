@@ -1,6 +1,7 @@
 package com.ecs160;
 
 import java.awt.Graphics2D;
+import java.awt.Image;
 import java.awt.RenderingHints;
 import java.awt.image.BufferedImage;
 import java.io.File;
@@ -114,6 +115,18 @@ public enum MusicSymbol {
                     e.printStackTrace();
                 }
         }
+    }  
+
+    public static Image getScaledImage(MusicSymbol sym, int size, boolean highlight) {
+        double largest = (double) Math.max(sym.width, sym.height);
+        int w = (int) (size * sym.width * sym.scale / largest);
+        int h = (int) (size * sym.height * sym.scale / largest);
+        if (highlight) return sym.highlightImage.getScaledInstance(w, h, Image.SCALE_SMOOTH);
+        else return sym.image.getScaledInstance(w, h, Image.SCALE_SMOOTH);
+    }
+
+    public static Image getScaledImage(MusicSymbol sym, int size) {
+        return getScaledImage(sym, size, false);
     }
 
     /* These are relevant inside the constructor, but not outside of this file */
