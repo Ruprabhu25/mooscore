@@ -632,35 +632,41 @@ public class TrackGUI extends JPanel {
             frame.setSize(1000, 1000);
 
             // Create a draggable container
-            TrackGUI TrackPanel = new TrackGUI();
+            TrackGUI trackPanel = new TrackGUI();
 
             // Create a MenuBar
-            MenuBar MenuBar = new MenuBar(TrackPanel);
-            ToolBar ToolBar = new ToolBar(TrackPanel);
+            MenuBar menuBar = new MenuBar(trackPanel);
+            ToolBar toolBar = new ToolBar(trackPanel);
 
             // Create a JScrollPane to add the draggable container with scrollbars
             JScrollPane scrollPane = new JScrollPane();
             // scrollPane.setPreferredSize(new Dimension(1000, 1000));
-            TrackPanel.setPreferredSize(new Dimension(1000, 1000));
-            TrackPanel.setMinimumSize(new Dimension(1000, 1000));
-            TrackPanel.setSize(1000, 1000);
+            trackPanel.setPreferredSize(new Dimension(1000, 1000));
+            trackPanel.setMinimumSize(new Dimension(1000, 1000));
+            trackPanel.setSize(1000, 1000);
             scrollPane.addComponentListener(new ComponentAdapter() {
                 @Override
                 public void componentResized(ComponentEvent e) {
                     // Repaint the content panel when resized
                     scrollPane.repaint();
-                    TrackPanel.repaint();
+                    trackPanel.repaint();
                 }
             });
-    
-            scrollPane.getViewport().add(TrackPanel);
+
+            scrollPane.getViewport().add(trackPanel);
+
             // Add the MenuBar and scroll pane to the frame
-            frame.add(MenuBar, BorderLayout.NORTH);
-            frame.add(ToolBar, BorderLayout.WEST);
+            frame.add(menuBar, BorderLayout.NORTH);
+            frame.add(toolBar, BorderLayout.WEST);
             frame.add(scrollPane, BorderLayout.CENTER);
+
+            //BottomPanel bottomPanel = new BottomPanel();
+            MidiPlayer player = new MidiPlayer();
+            frame.add(player, BorderLayout.SOUTH);
+
             frame.setVisible(true);
 
-            TrackPanel.addTitlesComposer();
+            trackPanel.addTitlesComposer();
         });
     }
 }

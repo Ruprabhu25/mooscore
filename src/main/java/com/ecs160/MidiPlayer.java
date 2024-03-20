@@ -12,14 +12,12 @@ import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
-public class MidiPlayer extends JFrame {
+public class MidiPlayer extends JPanel {
     private Sequencer sequencer;
     private JButton playButton;
     private JSlider positionSlider;
 
     public MidiPlayer() {
-        super("MIDI Player");
-
         // Initialize sequencer
         try {
             sequencer = MidiSystem.getSequencer();
@@ -36,15 +34,8 @@ public class MidiPlayer extends JFrame {
         positionSlider.addChangeListener(new PositionSliderListener());
 
         // Add components to the frame
-        JPanel controlPanel = new JPanel(new BorderLayout());
-        controlPanel.add(playButton, BorderLayout.NORTH);
-        controlPanel.add(positionSlider, BorderLayout.CENTER);
-        add(controlPanel, BorderLayout.CENTER);
-
-        setSize(300, 150);
-        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        setLocationRelativeTo(null);
-        setVisible(true);
+        add(positionSlider);
+        add(playButton);
     }
 
     
@@ -109,13 +100,13 @@ public class MidiPlayer extends JFrame {
                 sequencer.stop();
                 playButton.setText("Play");
             } else {
-                try {
-                    sequencer.setSequence(/* Provide your MIDI sequence here */);
+                /*try {
+                    sequencer.setSequence(/* Provide your MIDI sequence here);
                     sequencer.start();
                     playButton.setText("Stop");
                 } catch (InvalidMidiDataException | MidiUnavailableException ex) {
                     ex.printStackTrace();
-                }
+                }*/
             }
         }
     }
