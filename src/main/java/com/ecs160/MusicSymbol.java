@@ -32,6 +32,7 @@ public enum MusicSymbol {
     NATURAL (2,4,1,0),
     DOUBLE_FLAT (3, 4, 1, 0),
     FLAT (4, 4, 1, 0),
+    SHARP (6, 5, 1, 0),
     QUARTER_NOTE_EQUALS (2, 5, 1, 0),
     BREATH_MARK (6, 4, 0.5, 0);
 
@@ -79,9 +80,6 @@ public enum MusicSymbol {
                 else highlight.setRGB(x, y, 0); // set to empty 
             }
         }
-        // set final attributes 
-        // width = x2 - x1;
-        // height = y2 - y1;
         width = (x2 - x1);
         height = (y2 - y1);
         
@@ -131,7 +129,7 @@ public enum MusicSymbol {
 
     /* These are relevant inside the constructor, but not outside of this file */
     private final int g_width = 675; // the width of each tile in the main image
-    private final int g_height = g_width - 38; // the grid's height is shorter than the width
+    private final int g_height = g_width - 42; // the grid's height is shorter than the width
     private final int x_offset = -84; // constant offset of the tile grid
     private final int y_offset = 327; // constant offset of the tile grid
     private final int buf = 30; // buffer around each image tile to clean up edges
