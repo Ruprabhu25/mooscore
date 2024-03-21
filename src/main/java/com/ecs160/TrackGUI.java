@@ -592,9 +592,9 @@ public class TrackGUI extends JPanel {
         ImageIcon tempoQuarterIcon = new ImageIcon(MusicSymbol.QUARTER_NOTE_EQUALS.image.getScaledInstance(20,33,Image.SCALE_SMOOTH));
         tempoQuarter = new JLabel(tempoQuarterIcon);
         tempoQuarter.setBounds(10, 60, tempoQuarterIcon.getIconWidth(), tempoQuarterIcon.getIconHeight());
-        tempoField = new JTextField("80");
+        tempoField = new JTextField("100");
         tempoField.setFont(new Font("Arial", Font.BOLD, 24));
-        tempoField.setBounds(30, 70, 100, 30);
+        tempoField.setBounds(30, 70, 200, 30);
         tempoField.setOpaque(false);
         tempoField.setBorder(new EmptyBorder(5, 10, 5, 10));
         add(tempoQuarter);
