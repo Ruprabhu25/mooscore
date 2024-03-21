@@ -4,6 +4,12 @@ import javax.swing.border.EmptyBorder;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.awt.image.BufferedImage;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -39,12 +45,14 @@ class MenuBar extends JPanel {
                 saveMenuItem.addActionListener(new ActionListener() {
                     @Override
                     public void actionPerformed(ActionEvent e) {
+                        saveToFile(gui);
                     }
                 });
                 
                 loadMenuItem.addActionListener(new ActionListener() {
                     @Override
                     public void actionPerformed(ActionEvent e) {
+                        loadFromFile(gui);
                     }
                 });
                 
@@ -64,23 +72,33 @@ class MenuBar extends JPanel {
                 JPopupMenu popupMenu = new JPopupMenu();
                 
                 // Create "Save" and "Load" menu items
-                JMenuItem shiftMenuItem = new JMenuItem("shift");
+                JMenuItem selectAllMenuItem = new JMenuItem("select all");
                 JMenuItem clearMenuItem = new JMenuItem("clear");
 
-                shiftMenuItem.addActionListener(new ActionListener() {
+                selectAllMenuItem.addActionListener(new ActionListener() {
                     @Override
                     public void actionPerformed(ActionEvent e) {
+                        for (Component c : gui.getComponents()) {
+                            if (c instanceof Symbol) {
+                                gui.select((Symbol) c);
+                            }
+                        }
                     }
                 });
                 
                 clearMenuItem.addActionListener(new ActionListener() {
                     @Override
                     public void actionPerformed(ActionEvent e) {
+                        for (Component c : gui.getComponents()) {
+                            if (c instanceof Symbol) {
+                                gui.remove(c);
+                            }
+                        }
                     }
                 });
                 
                 // Add menu items to the popup menu
-                popupMenu.add(shiftMenuItem);
+                popupMenu.add(selectAllMenuItem);
                 popupMenu.add(clearMenuItem);
                 
                 // Display the popup menu at the location of the file button
@@ -104,6 +122,57 @@ class MenuBar extends JPanel {
         setLayout(new BorderLayout());
         add(MenuBar, BorderLayout.NORTH);
     }
+
+    private void saveToFile(TrackGUI gui) {
+        JFileChooser fileChooser = new JFileChooser();
+        fileChooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
+        int option = fileChooser.showOpenDialog(this);
+        if (option == JFileChooser.APPROVE_OPTION) {
+            String selectedDirectory = fileChooser.getSelectedFile().getAbsolutePath();
+            System.out.println("Selected Directory: " + selectedDirectory);
+            File file = new File(selectedDirectory + File.separator + gui.getTitle() + ".dat");
+            Component[] components = gui.getComponents();
+            try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(file))) {
+                for (Component component : components) {
+                    oos.writeObject(component);
+                }
+                System.out.println("Components saved successfully.");
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    private void loadFromFile(TrackGUI gui) {
+        JFileChooser fileChooser = new JFileChooser();
+        fileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
+        int option = fileChooser.showOpenDialog(this);
+        if (option == JFileChooser.APPROVE_OPTION) {
+            gui.removeAll();
+            gui.revalidate();
+            gui.repaint();
+            String selectedFile = fileChooser.getSelectedFile().getAbsolutePath();
+            try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(selectedFile))) {
+            while (true) {
+                try {
+                    Component component = (Component) ois.readObject();
+                    if (component instanceof Symbol) {
+                        Symbol s = (Symbol) component;
+                        gui.createNewSymbol(s.sym, s.getX(), s.getY());
+                    }
+                    else {
+                        gui.add(component);
+                    }
+                } catch (ClassNotFoundException e) {
+                    e.printStackTrace();
+                }
+        }
+        } catch (IOException e) {
+            // End of file reached or file does not exist
+            System.out.println("Components loaded successfully.");
+        }
+    }
+}
 }
 
 class ToolBar extends JPanel {
@@ -397,6 +466,10 @@ public class TrackGUI extends JPanel {
         });
     }
 
+    public String getTitle() {
+        return titleField.getText();
+    }
+
     private void addTitlesComposer() {
         titleField = new JTextField("My Music");
         titleField.setFont(new Font("Arial", Font.BOLD, 24));
@@ -444,7 +517,7 @@ public class TrackGUI extends JPanel {
         
     }
 
-    private void select(Symbol s) {
+    protected void select(Symbol s) {
         // make sure the same symbol is not selected twice
         if (selected.contains(s)) return;
         selected.add(s);
@@ -475,7 +548,7 @@ public class TrackGUI extends JPanel {
         return out;
     }
 
-    private void createNewSymbol(MusicSymbol newSym, int x, int y) {
+    protected void createNewSymbol(MusicSymbol newSym, int x, int y) {
         // align symbol to grid
         Point grid_point = getGridPoint(x, y);
         Symbol symbol = new Symbol(newSym, grid_point.x, grid_point.y);
@@ -554,7 +627,6 @@ public class TrackGUI extends JPanel {
                     shiftSymbols(r, next.getSymbolX(), getWidth(), (x - next.getSymbolX())/ gridSize + 6);
             }
         }
-        // System.out.println(measureLocations);
     }
 
     private ArrayList<Symbol> getSymbolsInXOrder() {
