@@ -334,7 +334,7 @@ public class TrackGUI extends JPanel {
         setLayout(null); // Use absolute positioning
         GraphicsDevice gd = GraphicsEnvironment.getLocalGraphicsEnvironment().getDefaultScreenDevice();
         
-        int maxWidth = Math.min(1500, (int) (gd.getDisplayMode().getWidth() * 0.4));
+        int maxWidth = Math.min(1500, (int) (gd.getDisplayMode().getWidth() * 0.8));
         // set max size, 1.29 times taller than wider for 8.5x11 feel
         Dimension trackDimension = new Dimension((int) maxWidth, (int) (maxWidth * 1.29));
         // System.out.println("dim: " + trackDimension);
