@@ -127,6 +127,10 @@ public enum MusicSymbol {
         return getScaledImage(sym, size, false);
     }
 
+    public int getDuration() {
+        return this.noteDuration;
+    }
+
     /* These are relevant inside the constructor, but not outside of this file */
     private final int g_width = 675; // the width of each tile in the main image
     private final int g_height = g_width - 42; // the grid's height is shorter than the width

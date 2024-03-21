@@ -9,7 +9,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
 
-
 // TODO:  can this be a JMenuBar rather than a panel? I think it will be more intuitive. The App example code uses a menu bar
 // if you want to see an example 
 class MenuBar extends JPanel {
@@ -180,7 +179,7 @@ public class TrackGUI extends JPanel {
     private JTextField composerField;
 
     private JLabel tempoQuarter;
-    private int tempo;
+    private int tempo = 80;
     private JTextField tempoField;
     
     public TrackGUI() {
@@ -419,6 +418,7 @@ public class TrackGUI extends JPanel {
             @Override
             public void actionPerformed(ActionEvent e) {
                 tempo = Integer.valueOf(tempoField.getText());
+                System.out.println("Tempo changed to " + tempo);
                 repaint();
             }
         });
@@ -612,38 +612,12 @@ public class TrackGUI extends JPanel {
         return new Rectangle(minx, miny, maxx - minx, maxy - miny);
     }
 
-    public Track getMidiTrack(Sequence sequence) {
-        Track track = sequence.createTrack();
-        // ArrayList<Component> sorted = getComponentsInXOrder();
-        int cur_tick = 0;
-        int channel = 0;
-        int velocity = 100;
-        for (ArrayList<Symbol> row : rows) {
-            for (Symbol s : row) {
-                // symbol is a note or rest
-                if (s.sym.noteDuration != 0) cur_tick += Math.abs(s.sym.noteDuration);
-                // symbol is a note 
-                if (s.sym.noteDuration > 0) {
-                    int pitch = getNotePitch(s);
-                    MidiPlayer.addNote(track, channel, pitch, 
-                    velocity, s.sym.noteDuration, cur_tick);
-                }
-            }
-        }
-        
-        return track;
-    } 
-
-    public int getNotePitch(Symbol s) {
-        // get pitch from notes y location
-        int vertical_position = (s.getY() / gridSize) % (gridHeight * gridSize);
-        // the center of the staff should be C = 60
-        int distance_from_center = (vertical_position - gridHeight / 2);
-        return 60 + distance_from_center;
-    }
-
     public void setActiveNote(MusicSymbol note) {
         this.activeMusicSymbol = note;
+    }
+
+    public ArrayList<ArrayList<Symbol>> getRows() {
+        return this.rows;
     }
 
     public static void main(String[] args) {
@@ -688,7 +662,7 @@ public class TrackGUI extends JPanel {
             frame.add(scrollPane, BorderLayout.CENTER);
 
             //BottomPanel bottomPanel = new BottomPanel();
-            MidiPlayer player = new MidiPlayer();
+            MidiPlayer player = new MidiPlayer(trackPanel);
             frame.add(player, BorderLayout.SOUTH);
 
             frame.setVisible(true);
