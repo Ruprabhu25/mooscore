@@ -2,13 +2,8 @@ package com.ecs160;
 
 import javax.sound.midi.*;
 import javax.swing.JButton;
-import javax.swing.JFrame;
 import javax.swing.JPanel;
 import javax.swing.JSlider;
-import javax.swing.*;
-import javax.swing.event.ChangeEvent;
-import javax.swing.event.ChangeListener;
-import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.ArrayList;
@@ -139,32 +134,6 @@ public class MidiPlayer extends JPanel {
         return new MidiEvent(message, tick);
     }
     
-    private static boolean areTracksEqual(Track track1, Track track2) {
-        if (track1.size() != track2.size()) 
-            return false;
-
-        for (int i = 0; i < track1.size(); i++) {
-            MidiEvent event1 = track1.get(i);
-            MidiEvent event2 = track2.get(i);
-            if (!areEventsEqual(event1, event2)) 
-                  return false;
-        }
-
-        return true;
-    }
-
-    private static boolean areEventsEqual(MidiEvent event1, MidiEvent event2) {
-        // not at same time
-        if (event1.getTick() != event2.getTick()) 
-            return false;
-
-        // not the same message 
-        if (!event1.getMessage().equals(event2.getMessage())) 
-            return false;
-
-        return true;
-    }
-
     
     class PlayButtonListener implements ActionListener {
         private Thread positionUpdater;
@@ -180,14 +149,9 @@ public class MidiPlayer extends JPanel {
             } else {
                 // check if track has changed
                 Sequence new_sequence = buildSequence();
-                Track new_track = new_sequence.getTracks()[0];
                 if (sequencer.getSequence() != null) {
-                    // if (areTracksEqual(new_track, sequencer.getSequence().getTracks()[0])) {
-                        // if it has not changed, get position on slider and play from there 
-                        long position = (long) (sequencer.getMicrosecondLength() * (positionSlider.getValue() / 100.0));
-                        sequencer.setMicrosecondPosition(position);
-                        // changed = false;
-                    // }
+                    long position = (long) (sequencer.getMicrosecondLength() * (positionSlider.getValue() / 100.0));
+                    sequencer.setMicrosecondPosition(position);
                 } else {
                     try {
                         sequencer.setSequence(new_sequence);

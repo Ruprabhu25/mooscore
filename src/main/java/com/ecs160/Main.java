@@ -9,7 +9,7 @@ public class Main {
     public static void main(String[] args) {
         SwingUtilities.invokeLater(() -> {
             // Create a JFrame to be the top level window
-            JFrame frame = new JFrame("Mooscore V 1.0");
+            JFrame frame = new JFrame("MooScore V 1.0");
             frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
             ImageIcon icon = new ImageIcon("src\\main\\java\\com\\ecs160\\imgs\\mooscore logo.png"); // Replace with the path to your icon file
             frame.setIconImage(icon.getImage());
@@ -24,12 +24,8 @@ public class Main {
             // Create a JScrollPane to add the draggable container with scrollbars
             JScrollPane scrollPane = new JScrollPane();
 
-            // get size of the current user screen 
-            GraphicsDevice gd = GraphicsEnvironment.getLocalGraphicsEnvironment().getDefaultScreenDevice();
-            int maxWidth = Math.min(1500, (int) (gd.getDisplayMode().getWidth() * 0.65));
             
             // make window full screen 
-            // frame.setSize(gd.getDisplayMode().getWidth(), gd.getDisplayMode().getHeight());
             frame.setExtendedState(JFrame.MAXIMIZED_BOTH);
 
             scrollPane.addComponentListener(new ComponentAdapter() {

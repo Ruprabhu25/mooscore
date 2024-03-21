@@ -10,7 +10,6 @@ import java.io.IOException;
 import javax.imageio.ImageIO;
 
 public enum MusicSymbol {
-    // TODO: add rests
     BASS (1, 1, 1, 0),
     REPEAT_END (3, 1, 1, 0),
     REPEAT_START (4, 1, 1, 0),
@@ -23,11 +22,11 @@ public enum MusicSymbol {
     EIGHTH (10, 3, 1, 2),
     SIXTEENTH (9, 3, 1, 1),
     
-    WHOLE_REST (6, 2, 0.5, -64),
-    HALF_REST (8, 2, 0.5, -32),
-    QUARTER_REST (3, 9, 0.5, -16),
-    EIGTH_REST (6, 6, 0.5, -8),
-    SIXTEENTH_REST (5, 6, 0.7, -4),
+    WHOLE_REST (6, 2, 0.5, -16),
+    HALF_REST (8, 2, 0.4, -8),
+    QUARTER_REST (3, 9, 0.5, -4),
+    EIGTH_REST (6, 6, 0.5, -2),
+    SIXTEENTH_REST (5, 6, 0.7, -1),
     DOUBLE_SHARP (1,4,0.7,0),
     NATURAL (2,4,1,0),
     DOUBLE_FLAT (3, 4, 1, 0),

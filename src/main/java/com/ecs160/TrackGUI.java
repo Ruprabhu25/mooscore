@@ -9,8 +9,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
 
-// TODO:  can this be a JMenuBar rather than a panel? I think it will be more intuitive. The App example code uses a menu bar
-// if you want to see an example 
 class MenuBar extends JPanel {
     private String user_guide_message = 
     """
@@ -153,8 +151,6 @@ class ToolBar extends JPanel {
         JToolBar toolBar = new JToolBar();
         toolBar.setLayout(new BoxLayout(toolBar, BoxLayout.Y_AXIS));
         
-        // TODO: can the width and height of the image icon be set using the w/h of the images themselves? the images should draw
-        // without being stretched to a certain shape
         // add buttons
         MusicSymbol notes[] = {MusicSymbol.SIXTEENTH, MusicSymbol.EIGHTH, 
                     MusicSymbol.QUARTER, MusicSymbol.HALF, MusicSymbol.WHOLE};

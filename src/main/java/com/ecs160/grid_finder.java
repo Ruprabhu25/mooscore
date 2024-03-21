@@ -39,37 +39,24 @@ class grid_finder extends JPanel {
             Graphics2D g2 = (Graphics2D) g.create();
             int w = Math.min(getWidth(), getHeight());
             w = Math.max(w, 1000);
-            // System.out.println();
-            double conversionFactor = (double) image.getWidth() / (double) w;
+            // double conversionFactor = (double) image.getWidth() / (double) w;
             int gridSize = (int)((double) w / (double)((double)image.getWidth() / grid_width));
             int x_offset = (int) ((double)w * x_off);
             int y_offset = (int) ((double)w * y_off);
-            // System.out.println(x_offset + ", " + y_offset);
-            // System.out.println(conversionFactor + ", " + x_offset * conversionFactor + ", " + y_offset * conversionFactor + ", " + bonus_height * conversionFactor );
-            // System.out.println(grid_width + ", " + x_offset + ", " + y_offset + ", " + bonus_height);
             g2.setColor(Color.red);
             for (int i = 0; i < w / gridSize; i++) {
                 for (int j = 0; j < w / gridSize; j++) {
                     int x = i * gridSize + x_offset;
                     int y = j * gridSize + y_offset + bonus_height * j;
                     Line2D hor = new Line2D.Float(0,y, gridSize * 20, y);
-                    // g2.draw(hor);
+                    g2.draw(hor);
                     Line2D vet = new Line2D.Float(x, 0, x, gridSize * 20);            
-                    // g2.draw(vet);
-                    // g2.drawLine()
-                    // g2.drawRect();
+                    g2.draw(vet);
                 }
             }
 
-            // g2.drawImage(image, 0, 0, w, w, this);
-            // g2.drawImage(image,10, 10, 100, 100, ix * 675 - 84, iy * (675 - 38) + 327,(ix + 1) * 675 - 84, (iy + 1) * (675 - 38) + 327, null);
-            // MusicImage test = MusicImage.QUARTER;
-            // BufferedImage images[] = {MusicImage.WHOLE.image, MusicImage.HALF.image, MusicImage.QUARTER.image};
-            // for (int i = 0; i < images.length; i++) {
-            //     g2.drawImage(images[i], 10 + 100 * i, 10, 10 + 100 * (i+ 1), 100, null);
-            // }
-            g2.drawImage(sym.image, 0, 0,sym.image.getWidth() *10 , sym.image.getHeight() * 10, null);
-            g2.dispose();
+            g2.drawImage(image,10, 10, 100, 100, ix * 675 - 84, iy * (675 - 38) + 327,(ix + 1) * 675 - 84, (iy + 1) * (675 - 38) + 327, null);
+            // g2.dispose();
         }
     }
 
