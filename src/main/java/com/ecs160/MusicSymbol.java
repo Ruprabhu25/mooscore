@@ -25,7 +25,7 @@ public enum MusicSymbol {
     
     WHOLE_REST (6, 2, 0.5, -64),
     HALF_REST (8, 2, 0.5, -32),
-    QUARTER_REST (3, 9, 1, -16),
+    QUARTER_REST (3, 9, 0.5, -16),
     EIGTH_REST (6, 6, 0.5, -8),
     SIXTEENTH_REST (5, 6, 0.7, -4),
     DOUBLE_SHARP (1,4,0.7,0),
@@ -51,7 +51,7 @@ public enum MusicSymbol {
     // the scale relative to other symbols that this symbol should be drawn at 
     double scale; 
     // this is the smallest note possible, a quarter note is RESOLUTION ticks long
-    static final int RESOLUTION = 16; 
+    static final int RESOLUTION = 4; 
     // 0 indicates it is not a playable note, negative indicates it is a rest
     final int noteDuration; 
     
@@ -91,7 +91,7 @@ public enum MusicSymbol {
         g2.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
 
         g2.drawImage(full_image, 0, 0, width, height, x1, y1, x1 + width, y1 + height, null);
-        // image = full_image.getSubimage(x1, y1, width, height);
+
         highlightImage = highlight.getSubimage(x1, y1, width, height);
         noteDuration = duration;
         this.scale = scale;

@@ -1,9 +1,9 @@
 package com.ecs160;
 
 import java.awt.*;
-import java.awt.RenderingHints;
 import java.awt.image.BufferedImage;
 
+import javax.swing.BorderFactory;
 import javax.swing.JComponent;
 
 class Symbol extends JComponent {
@@ -17,17 +17,22 @@ class Symbol extends JComponent {
     // these are determined by the underlying MusicSymbol and are 
     // scaled to fit the size. The largest between the sym's
     // width and height are set to be equal to the size. 
-    private int symbolWidth = 0;
-    private int symbolHeight = 0;
+    private int symbolWidth;
+    private int symbolHeight;
     
     // these are set dynamically as the accidental is updateded by user
     private int accidentalWidth = 0;
     private int accidentalHeight = 0;
     // gaps between note and its accidental
-    private int accidentalXbuffer = 5;
-    private int accidentalYbuffer = 5;
+    private final int accidentalXbuffer = 5;
+    // private final int accidentalYbuffer = 5;
     private MusicSymbol accidental = null;
     
+    // these control the size of the actual component,
+    // and are meant to fit both the symbol any accidental
+    private int boundWidth;
+    private int boundHeight;
+
     // controls whether the symbol draws as highlighted or not
     public boolean selected = false;
 
@@ -51,50 +56,53 @@ class Symbol extends JComponent {
         BufferedImage img;
         if (selected) img = sym.highlightImage;
         else img = sym.image;
-        g2.drawImage(img, accidentalWidth, 0, symbolWidth, symbolHeight, null);
+        g2.drawImage(img, getWidth() - symbolWidth, getHeight() - symbolHeight, symbolWidth, symbolHeight, null);
         
         // draw accidental if applicable
         if (accidental != null) { 
             if (selected) img = accidental.highlightImage;
             else img = accidental.image;
-            g2.drawImage(img, 0, symbolHeight - accidentalHeight, 
-            accidentalWidth - accidentalXbuffer, accidentalHeight - accidentalYbuffer, null);
+            g2.drawImage(img, (size / 3) - accidentalWidth, getHeight() - accidentalHeight, 
+            accidentalWidth, accidentalHeight, null);
         }
     }
 
     public void resize(int size) {
-        // update the size of the component and its children
-        double largest = (double) Math.max(sym.width, sym.height);
+        // update the size of the component
         this.size = size;
+        double largest = (double) Math.max(sym.width, sym.height);
         symbolWidth = (int) (size * sym.width / largest);
         symbolHeight = (int) (size * sym.height / largest);
-        updateBounds();
+        int flatHeight = (int) ((size / sym.scale) / 2);
+
+        // update the width and height of the symbols bounding box 
+        boundWidth = symbolWidth + (size / 3) + accidentalXbuffer;
+        boundHeight = Math.max(symbolHeight, flatHeight);
+
+        // update the bounds of the symbol as a component
+        setBounds(getX(), getY(), boundWidth, boundHeight);
     }
 
     public void setAccidental(MusicSymbol newAccidental) {
         accidental = newAccidental;
-        // clear accidental if arg is null or if new accidental is the same as old one
+        // clear accidental if arg is null
         if (newAccidental == null) {
             accidentalWidth = 0;
             accidentalHeight = 0;
-            updateBounds();
+            // updateBounds();
             return;
         }
+
         // set relevant accidental fields for drawing to screen 
         double largest = (double) Math.max(accidental.width, accidental.height) * accidental.scale;
         // divide by sym.scale so that accidentals are always full size
         double accidentalSize = (size / sym.scale) * 0.5;
-        accidentalWidth = (int) (accidentalSize * accidental.width / largest) + accidentalXbuffer;
-        accidentalHeight = (int) (accidentalSize * accidental.height / largest) + accidentalYbuffer;
-        updateBounds(); 
+        accidentalWidth = (int) (accidentalSize * accidental.width / largest);
+        accidentalHeight = (int) (accidentalSize * accidental.height / largest);        
     }
 
-    // update the bounds of the component to fit both the symbol
-    // and accidental
-    private void updateBounds() {
-        setBounds(getX() - accidentalWidth, getY(), 
-            symbolWidth + accidentalWidth, 
-            Math.max(symbolHeight, accidentalHeight));
+    public MusicSymbol getAccidental() {
+        return accidental;
     }
 
     public int getBottomY() {
@@ -106,17 +114,10 @@ class Symbol extends JComponent {
 
     public int getSymbolX() {
         // ignore the added width of the accidental
-        int x = getX();
-        return x + accidentalWidth;
+        // System.out.println("x: " + getX() + ", sym x: " + (getX() + (boundWidth - symbolWidth)));
+        return getX() + (boundWidth - symbolWidth);
     }
 
-    public int getSymbolY() {
-        // ignore the added height of the accidental
-        int y = getY();
-        if (accidentalHeight > symbolHeight) 
-            y += accidentalHeight - symbolHeight;
-        return y;
-    }
     public void deselect() {
         selected = false;
     }

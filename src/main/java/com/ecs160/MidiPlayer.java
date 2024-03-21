@@ -107,7 +107,6 @@ public class MidiPlayer extends JPanel {
             track.add(createNoteOnEvent(channel, pitch, velocity, start_tick));
             track.add(createNoteOffEvent(channel, pitch, start_tick + duration));
         } catch (InvalidMidiDataException e) {
-            // TODO Auto-generated catch block
             e.printStackTrace();
         }
     }
@@ -125,16 +124,25 @@ public class MidiPlayer extends JPanel {
     }
     
     class PlayButtonListener implements ActionListener {
+        private Thread positionUpdater;
+    
         @Override
         public void actionPerformed(ActionEvent e) {
             if (sequencer.isRunning()) {
                 sequencer.stop();
                 playButton.setText("Play");
+                if (positionUpdater != null) {
+                    positionUpdater.interrupt();
+                }
             } else {
-                buildAndPlaySequence();
+                sequencer.start();
+                playButton.setText("Stop");
+                positionUpdater = new Thread(new UpdatePositionTask());
+                positionUpdater.start();
             }
         }
     }
+    
 
     class PositionSliderListener implements ChangeListener {
         @Override
@@ -145,6 +153,26 @@ public class MidiPlayer extends JPanel {
             }
         }
     }
+    
+    class UpdatePositionTask implements Runnable {
+        @Override
+        public void run() {
+            while (sequencer.isRunning()) {
+                long position = sequencer.getMicrosecondPosition();
+                long length = sequencer.getMicrosecondLength();
+                if (length > 0) {
+                    int value = (int) (position * 100 / length);
+                    positionSlider.setValue(value);
+                }
+                try {
+                    Thread.sleep(100); // Update every 100 milliseconds
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+    }
+    
 }
 
 
