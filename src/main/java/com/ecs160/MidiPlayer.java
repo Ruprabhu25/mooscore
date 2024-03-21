@@ -17,7 +17,7 @@ public class MidiPlayer extends JPanel {
     private Sequencer sequencer;
     private JButton playButton;
     private JSlider positionSlider;
-    private static TrackGUI trackPanel;
+    private TrackGUI trackPanel;
 
     public MidiPlayer(TrackGUI trackPanel) {
         // Initialize sequencer
@@ -42,7 +42,7 @@ public class MidiPlayer extends JPanel {
     }
 
     
-    public static void buildAndPlaySequence() {
+    public void buildAndPlaySequence() {
         try {
             // Obtain a Sequencer instance
             Sequencer sequencer = MidiSystem.getSequencer();
@@ -60,17 +60,17 @@ public class MidiPlayer extends JPanel {
             int velocity = 50;
             int cur_tick = 0;
             // Set the sequence to the sequencer and start playing
-            for (ArrayList<Symbol> row : trackPanel.getRows()) {
+            for (ArrayList<Symbol> row : this.trackPanel.getRows()) {
                 for (Symbol note : row) {
                     System.out.println(note.getX() + " " + note.getY());
                     //Interesting bug for whole notes, the offset of y position is 60 pixels for all lines
                     int pitch = getNotePitch(note);
-                    int noteDuration = note.sym.getDuration() / 4;
+                    int noteDuration = note.sym.getDuration();
                     // symbol is a note or rest
-                    if (noteDuration == 0) {
+                    if (noteDuration < 0) {
                         cur_tick += Math.abs(noteDuration);
                     }
-                    if (noteDuration > 0) {
+                    else if (noteDuration > 0) {
                         System.out.println("Duration " + noteDuration);
                         addNote(track, channel, pitch, velocity, noteDuration, cur_tick);
                         cur_tick += Math.abs(noteDuration);
@@ -91,10 +91,14 @@ public class MidiPlayer extends JPanel {
         //highest note is 180, 440, 700... (high high C) = (midi = 60+14 = 74)
         int gridSize = 10;
         int gridHeight = 26;
-        int vertical_position = (s.getY() / gridSize) % (gridHeight * gridSize);
+        int vertical_position;
+        if (s.sym == MusicSymbol.WHOLE)
+            vertical_position = ((s.getY()-60) / gridSize) % (gridHeight * gridSize);
+        else
+            vertical_position = (s.getY() / gridSize) % (gridHeight * gridSize);
         // the center of the staff should be C = 60
         int distance_from_center = (vertical_position - gridHeight / 2);
-        return 60 - distance_from_center;
+        return 60 - (distance_from_center * 2); 
     }
 
     public static void addNote(Track track, int channel, int pitch, int velocity, int duration, int start_tick) {
@@ -118,10 +122,6 @@ public class MidiPlayer extends JPanel {
         ShortMessage message = new ShortMessage();
         message.setMessage(ShortMessage.NOTE_OFF, channel, note, 0);
         return new MidiEvent(message, tick);
-    }
-
-    public static void main(String[] args) {
-        buildAndPlaySequence();
     }
     
     class PlayButtonListener implements ActionListener {
