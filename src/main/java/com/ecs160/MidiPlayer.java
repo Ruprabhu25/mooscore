@@ -53,7 +53,7 @@ public class MidiPlayer extends JPanel {
             int channel = 0;
             int velocity = 50;
             int cur_tick = 0;
-            // Set the sequence to the sequencer and start playing
+            // go through all notes in row order 
             for (ArrayList<Symbol> row : this.trackPanel.getRows()) {
                 for (Symbol note : row) {
                     int pitch = getNotePitch(note);
@@ -127,8 +127,7 @@ public class MidiPlayer extends JPanel {
         message.setMessage(ShortMessage.NOTE_OFF, channel, note, 0);
         return new MidiEvent(message, tick);
     }
-    
-    
+       
     class PlayButtonListener implements ActionListener, MetaEventListener {
         private Thread positionUpdater;
     

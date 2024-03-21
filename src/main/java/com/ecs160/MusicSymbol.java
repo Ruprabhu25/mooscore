@@ -10,6 +10,8 @@ import java.io.IOException;
 import javax.imageio.ImageIO;
 
 public enum MusicSymbol {
+    // Note images are created using their tiled position inside 
+    // the master image, notes.png
     BASS (1, 1, 1, 0),
     REPEAT_END (3, 1, 1, 0),
     REPEAT_START (4, 1, 1, 0),
@@ -22,11 +24,13 @@ public enum MusicSymbol {
     EIGHTH (10, 3, 1, 2),
     SIXTEENTH (9, 3, 1, 1),
     
+    // rests 
     WHOLE_REST (6, 2, 0.5, -16),
     HALF_REST (8, 2, 0.4, -8),
     QUARTER_REST (3, 9, 0.5, -4),
     EIGTH_REST (6, 6, 0.5, -2),
     SIXTEENTH_REST (5, 6, 0.7, -1),
+    // accidentals / other
     DOUBLE_SHARP (1,4,0.7,0),
     NATURAL (2,4,1,0),
     DOUBLE_FLAT (3, 4, 1, 0),
@@ -53,10 +57,13 @@ public enum MusicSymbol {
     final int noteDuration; 
     
     private MusicSymbol(int tilex, int tiley, double scale, int duration) {
-        new Helper(); // load the main png file if it isnt loaded already
+        new ImageLoader(); // load the main png file if it isnt loaded already
+        this.scale = scale;
+        noteDuration = duration;
+
         int x = (tilex * g_width) + x_offset + buf;
         int y = (tiley * g_height) + buf + y_offset;
-        BufferedImage full_image = Helper.master.getSubimage(x, y, g_width - buf, g_height - buf);
+        BufferedImage full_image = ImageLoader.master.getSubimage(x, y, g_width - buf, g_height - buf);
         BufferedImage highlight = new BufferedImage(g_width-buf, g_height-buf, BufferedImage.TYPE_INT_ARGB);
         
         // Find the edges of the image, and set the width and height accordingly
@@ -67,13 +74,18 @@ public enum MusicSymbol {
         int y2 = 0;
         for (y = 0; y < full_image.getHeight(); y++) {
             for (x = 0; x < full_image.getWidth(); x++) {
+                // negative pixels means it is an opaque black pixel = 0xFF000000 = -211...
                 if (full_image.getRGB(x, y) < 0) {
+                    // Store the lowest and highest found pixels
+                    // to have the corners of the image well described 
                     x1 = Math.min(x1, x);
                     x2 = Math.max(x2, x);
                     y1 = Math.min(y1, y);
                     y2 = Math.max(y2, y);
+                    // copy black pixels as blue in highlight image
                     highlight.setRGB(x, y, highlightRGB);
                 }
+                // copy empty pixels as empty in highlight image
                 else highlight.setRGB(x, y, 0); // set to empty 
             }
         }
@@ -86,18 +98,16 @@ public enum MusicSymbol {
         g2.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
         g2.setRenderingHint(RenderingHints.KEY_COLOR_RENDERING, RenderingHints.VALUE_COLOR_RENDER_QUALITY);
         g2.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
-
+        // draw subimage into final result image
         g2.drawImage(full_image, 0, 0, width, height, x1, y1, x1 + width, y1 + height, null);
 
         highlightImage = highlight.getSubimage(x1, y1, width, height);
-        noteDuration = duration;
-        this.scale = scale;
     }
 
     /* This class exists so that the master image can be a static variable :p */ 
-    private static final class Helper {
+    private static final class ImageLoader {
         static BufferedImage master = null;
-        public Helper() {
+        public ImageLoader() {
             if (master == null)
                 try {
                     String osName = System.getProperty("os.name").toLowerCase();
