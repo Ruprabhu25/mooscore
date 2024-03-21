@@ -142,17 +142,16 @@ public class MidiPlayer extends JPanel {
                 }
             } else {
                 // check if track has changed
-                Sequence new_sequence = buildSequence(trackPanel);
-                if (sequencer.getSequence() != null) {
-                    long position = (long) (sequencer.getMicrosecondLength() * (positionSlider.getValue() / 100.0));
-                    sequencer.setMicrosecondPosition(position);
-                } else {
+                    Sequence new_sequence = buildSequence(trackPanel);
                     try {
                         sequencer.setSequence(new_sequence);
                     } catch (InvalidMidiDataException e1) {
                         e1.printStackTrace();
                     }
-                }
+                    if (sequencer.getSequence() != null) {
+                        long position = (long) (sequencer.getMicrosecondLength() * (positionSlider.getValue() / 100.0));
+                        sequencer.setMicrosecondPosition(position);
+                    } 
                 // start playing the sequence / music
                 sequencer.addMetaEventListener(this); // Add MetaEventListener
                 sequencer.start();
