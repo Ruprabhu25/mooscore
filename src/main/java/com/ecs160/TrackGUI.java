@@ -16,11 +16,45 @@ import java.util.Arrays;
 import java.util.Comparator;
 
 class MenuBar extends JPanel {
+    // message for user when they click help
     private String user_guide_message = 
     """
-        Hello
+        Upon opening the app, users are able to see a representation of a blank music sheet. Users will be able to immediately edit the music sheet with the preset notation attributes. 
+        Other than adding music, the user will be able to type in the title, subtitle, and author of the music. Some permanent settings for this version of MooScore are a treble clef, 
+        key signature of C, and 4/4 time signature. Users will also be able to enter information about the music: a title, subtitle, tempo, and composer. There are three other sections 
+        in the GUI: the menu bar, the tool bar, and the playback section. 
 
-        This is the user guide. Info goes here.
+        Once the user has opened the app, they will see the notes and rests they are able to place along the left edge of the screen and a blank score with text fields inside the main panel. 
+        They can begin placing notes by left clicking on the button for the note they would like to add, then left clicking inside the main panel. If they would like to place multiple of the 
+        same note, they can hold shift while clicking to keep the active note. Once placed, notes can be selected by either clicking directly on them or dragging a box around several notes. 
+        Selected notes can be moved either by dragging with the mouse, or by using the WASD or arrow keys on the keyboard. While selected, notes can be deleted with the Backspace or Delete keys. 
+        They can be made flat, sharp, or natural using the bottom buttons on the toolbar or the F, H, and N keys. 
+
+        The user can edit the Title, subtitle, composer, and tempo text fields by clicking on the text they would like to edit, then typing their changes. Clicking any blank space within the main 
+        panel will deselect any selected notes or text fields. Large changes can be made to the piece using the options in the Edit menu along the top menu bar.
+
+        When the user is ready to hear their new song, they can press the Play button along the bottom of the screen, and use the slider to control the playback. Once they are done working on their song, 
+        they can use the Save option inside the File menu bar, and load their work again later using the corresponding Load function.
+
+        The menu bar will perform extensive functions that are beyond the scope of the tool bar. For now, it will include three buttons: file, edit, and help. Upon clicking the file button, 
+        users will be prompted to either save or load their music. When saving music, the application will prompt the user to select a directory in their file system. Upon confirmation, the 
+        application will take the current music sheet and save the sheet information into a file for the user to store on their file system. The file will be named after the title of the music 
+        sheet with the file type of .dat ( ex. “My Music.dat”). Conversely, the load option will allow the user to take a previously save music sheet file and load it into the application. Clicking 
+        the load button will again open the file directory for the user to navigate and find the file they had previously saved. On confirmation, the current music sheet will be replaced with the 
+        one loaded from the file. The edit button will include the ability to select one or more measures of music and perform operations to them, such as shifting or clearing. The edit button provides 
+        a popup which provides the “select all” and “clear” functions. Pressing “select all” will select all the notes on the screen, which will allow users to shift them in any direction. Pressing 
+        “clear” will delete all notes from the screen. The help button will create a pop-up that will display the contents of the user manual to provide any clarifications about the functionality. 
+        
+        The tool bar will provide all the music note options and functions. These will include choosing note and rests (sixteenth, eighth, quarter, half, whole). Users will also be able to add accidentals 
+        to notes. The user will have to select a note, then press the flat or sharp button which acts as a toggle for adding/removing flats and sharps. Users will note be able to add sharps or flats to 
+        music notes that already have the opposite accidental. The current functionality will overwrite the current accidental with the new one that the user has selected. 
+
+        The playback bar allows the user to play the music that is currently on the GUI / sheet. The user can click play and will subsequently hear the music representation of their notes. During playback, 
+        the user can click the same button to stop the music as it is playing if they want to take a break, and then resume when they want to listen to the music again. Once all the music has been played, 
+        the play button resets, and the next time the user presses play, it will play from the start of the music sheet. If the user wants to skip to different portions of their music, they can use the 
+        playback slider to iterate through the notes until they reach the part that they want to listen to. When they drag the slider to a certain position, the music is halted and only starts when the 
+        user clicks play again. 
+
     """;
     public MenuBar(TrackGUI gui) {
         // Create a MenuBar
@@ -41,7 +75,8 @@ class MenuBar extends JPanel {
                 // Create "Save" and "Load" menu items
                 JMenuItem saveMenuItem = new JMenuItem("Save");
                 JMenuItem loadMenuItem = new JMenuItem("Load");
-
+                
+                // actionlisteners to call save / load functions when clicked
                 saveMenuItem.addActionListener(new ActionListener() {
                     @Override
                     public void actionPerformed(ActionEvent e) {
@@ -71,10 +106,11 @@ class MenuBar extends JPanel {
             public void actionPerformed(ActionEvent e) {
                 JPopupMenu popupMenu = new JPopupMenu();
                 
-                // Create "Save" and "Load" menu items
+                // Create "select all" and "clear" menu items
                 JMenuItem selectAllMenuItem = new JMenuItem("select all");
                 JMenuItem clearMenuItem = new JMenuItem("clear");
 
+                // iterate through components and select all components of type Symbol
                 selectAllMenuItem.addActionListener(new ActionListener() {
                     @Override
                     public void actionPerformed(ActionEvent e) {
@@ -86,6 +122,7 @@ class MenuBar extends JPanel {
                     }
                 });
                 
+                // iterate through components and delete all components of type Symbol
                 clearMenuItem.addActionListener(new ActionListener() {
                     @Override
                     public void actionPerformed(ActionEvent e) {
@@ -101,11 +138,12 @@ class MenuBar extends JPanel {
                 popupMenu.add(selectAllMenuItem);
                 popupMenu.add(clearMenuItem);
                 
-                // Display the popup menu at the location of the file button
+                // Display the popup menu at the location of the edit button
                 popupMenu.show(fileButton, editButton.getWidth(), fileButton.getHeight());
             }
         });
 
+        // creates User Guide popup when help button is clicked
         helpButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -123,14 +161,19 @@ class MenuBar extends JPanel {
         add(MenuBar, BorderLayout.NORTH);
     }
 
+    // function for saving the current music sheet to a file
     private void saveToFile(TrackGUI gui) {
+        // prompt user to pick a directory to save to
         JFileChooser fileChooser = new JFileChooser();
         fileChooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
         int option = fileChooser.showOpenDialog(this);
         if (option == JFileChooser.APPROVE_OPTION) {
+            // get path of selected directory
             String selectedDirectory = fileChooser.getSelectedFile().getAbsolutePath();
             System.out.println("Selected Directory: " + selectedDirectory);
+            // create file based off of directory and title of the music sheet
             File file = new File(selectedDirectory + File.separator + gui.getTitle() + ".dat");
+            // add all current components to the output file
             Component[] components = gui.getComponents();
             try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(file))) {
                 for (Component component : components) {
@@ -143,30 +186,36 @@ class MenuBar extends JPanel {
         }
     }
 
+    // function to load data from a file to render on the music sheet
     private void loadFromFile(TrackGUI gui) {
+        // prompt user to select a file that they had previously saved
         JFileChooser fileChooser = new JFileChooser();
         fileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
         int option = fileChooser.showOpenDialog(this);
         if (option == JFileChooser.APPROVE_OPTION) {
+            // remove all components on the screen
             gui.removeAll();
             gui.revalidate();
             gui.repaint();
             String selectedFile = fileChooser.getSelectedFile().getAbsolutePath();
             try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(selectedFile))) {
-            while (true) {
+            // continuously read from the file till EOF is reached
+                while (true) {
                 try {
+                    // check if component is a symbol, if so, call createNewSymbol()
                     Component component = (Component) ois.readObject();
                     if (component instanceof Symbol) {
                         Symbol s = (Symbol) component;
                         gui.createNewSymbol(s.sym, s.getX(), s.getY());
                     }
+                    // if not a symbol, render regularly
                     else {
                         gui.add(component);
                     }
                 } catch (ClassNotFoundException e) {
                     e.printStackTrace();
                 }
-        }
+            }
         } catch (IOException e) {
             // End of file reached or file does not exist
             System.out.println("Components loaded successfully.");
@@ -176,8 +225,7 @@ class MenuBar extends JPanel {
 }
 
 class ToolBar extends JPanel {
-    // private void addAccidentalButton(MusicSymbol sym, JToolBar toolBar)
-    
+    // function to add music symbol represntations on the toolbar    
     private void addSymbolButton(MusicSymbol sym, JToolBar toolBar, TrackGUI gui) {
         int image_size = 50;
         BufferedImage icon = new BufferedImage(image_size, image_size, BufferedImage.TYPE_INT_ARGB);
@@ -187,6 +235,7 @@ class ToolBar extends JPanel {
             (image_size - sym_image.getHeight(null)) / 2, null);
         JButton button = new JButton(new ImageIcon(icon));
         toolBar.add(button);
+        // set active note to whatever button is pressed
         button.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -195,6 +244,7 @@ class ToolBar extends JPanel {
         });
     }
 
+    // special function for accidentals to add them to existing notes
     private void addAccidentalButton(MusicSymbol accidental, JToolBar toolBar, TrackGUI gui) {
         int image_size = 50;
         BufferedImage icon = new BufferedImage(image_size, image_size, BufferedImage.TYPE_INT_ARGB);
@@ -202,9 +252,10 @@ class ToolBar extends JPanel {
         icon.getGraphics().drawImage(sym_image, 
             (image_size - sym_image.getWidth(null)) / 2, 
             (image_size - sym_image.getHeight(null)) / 2, null);
+        // add button to toolbar
         JButton button = new JButton(new ImageIcon(icon));
-
         toolBar.add(button);
+        // set accidental to flat/sharp/none when an accidental button is pressed
         button.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -216,26 +267,33 @@ class ToolBar extends JPanel {
         });
     }
 
+    // toolbar constructor
     public ToolBar(TrackGUI gui) {
+        // create JToolbar which represents the visual component
         JToolBar toolBar = new JToolBar();
         toolBar.setLayout(new BoxLayout(toolBar, BoxLayout.Y_AXIS));
         
-        // add buttons
+        // add buttons for notes
         MusicSymbol notes[] = {MusicSymbol.SIXTEENTH, MusicSymbol.EIGHTH, 
                     MusicSymbol.QUARTER, MusicSymbol.HALF, MusicSymbol.WHOLE};
         for (MusicSymbol n : notes) addSymbolButton(n, toolBar, gui);
         
+        // add button for rests
         MusicSymbol rests[] = {MusicSymbol.SIXTEENTH_REST, MusicSymbol.EIGTH_REST,
             MusicSymbol.QUARTER_REST, MusicSymbol.HALF_REST};
         for (MusicSymbol r : rests) addSymbolButton(r, toolBar, gui);
 
+        // add buttons for accidentals
         MusicSymbol accidentals[] = {MusicSymbol.FLAT, MusicSymbol.SHARP, MusicSymbol.NATURAL};
         for (MusicSymbol accidental : accidentals) addAccidentalButton(accidental, toolBar, gui);
-        setLayout(new BorderLayout()); 
+        setLayout(new BorderLayout());
+        
+        // add toolbar to top of the GUI screen
         add(toolBar, BorderLayout.NORTH);
     }
 }
 
+// main class for placing notes and editing the music sheet
 public class TrackGUI extends JPanel {
     // The number of pixels between each grid point
     private final int gridSize = 10;
@@ -262,12 +320,13 @@ public class TrackGUI extends JPanel {
 
     // this keeps track of if the track has been changed in between playback
 
+    // fields for music sheet information
     private JTextField titleField;
     private JTextField subtitleField;
     private JTextField composerField;
 
+    // tempo fields
     private JLabel tempoQuarter;
-    private int tempo = 80;
     private JTextField tempoField;
     
     public TrackGUI() {
@@ -352,6 +411,7 @@ public class TrackGUI extends JPanel {
                     default: 
                         clearSelection();
                 }
+                // adjust all selected notes
                 for (Symbol s : selected) {
                     moveSymbol(s, s.getX() + dx, s.getY() + dy);
                     if (newAccidental != MusicSymbol.BREATH_MARK) {
@@ -359,6 +419,7 @@ public class TrackGUI extends JPanel {
                         else s.setAccidental(newAccidental);
                     }
                 }
+                // recalculate measure locations on shift
                 calculateMeasureLocations();
                 return (!selected.isEmpty());
             }
@@ -433,6 +494,7 @@ public class TrackGUI extends JPanel {
         
         addMouseMotionListener(new MouseMotionAdapter() {
             @Override
+            // check if the user is dragging the mouse across the screen
             public void mouseDragged(MouseEvent e) {
                 if (!selected.isEmpty()) {
                     int dx = e.getX() - last_clickX;
@@ -466,10 +528,17 @@ public class TrackGUI extends JPanel {
         });
     }
 
+    // return current String content in the title field
     public String getTitle() {
         return titleField.getText();
     }
 
+    // return the current tempo from the tempo field
+    public int getTempo() {
+        return Integer.parseInt(tempoField.getText());
+    }
+
+    // add default title, subtitle, and composer information
     private void addTitlesComposer() {
         titleField = new JTextField("My Music");
         titleField.setFont(new Font("Arial", Font.BOLD, 24));
@@ -489,34 +558,28 @@ public class TrackGUI extends JPanel {
         composerField.setOpaque(false);
         composerField.setBorder(new EmptyBorder(5, 10, 5, 10));
 
-        // Add the text field to the panel
+        // Add the text fields to the panel
         add(titleField);
         add(subtitleField);
         add(composerField);
     }
 
+    // render tempo (quarter) and tempo text field onto the screen
     private void addTempo() {
         ImageIcon tempoQuarterIcon = new ImageIcon(MusicSymbol.QUARTER_NOTE_EQUALS.image.getScaledInstance(20,33,Image.SCALE_SMOOTH));
         tempoQuarter = new JLabel(tempoQuarterIcon);
         tempoQuarter.setBounds(10, 60, tempoQuarterIcon.getIconWidth(), tempoQuarterIcon.getIconHeight());
         tempoField = new JTextField("80");
         tempoField.setFont(new Font("Arial", Font.BOLD, 24));
-        tempoField.setBounds(30, 70, 50, 30);
+        tempoField.setBounds(30, 70, 100, 30);
         tempoField.setOpaque(false);
         tempoField.setBorder(new EmptyBorder(5, 10, 5, 10));
-        tempoField.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                tempo = Integer.valueOf(tempoField.getText());
-                System.out.println("Tempo changed to " + tempo);
-                repaint();
-            }
-        });
         add(tempoQuarter);
         add(tempoField);
         
     }
 
+    // highlight / select a note provided with a reference to the symbol object
     protected void select(Symbol s) {
         // make sure the same symbol is not selected twice
         if (selected.contains(s)) return;
@@ -525,6 +588,7 @@ public class TrackGUI extends JPanel {
         repaint();
     }
 
+    // deselect all symbol notes
     private void clearSelection() {
         for (Symbol s : selected) 
             s.deselect();
@@ -651,8 +715,6 @@ public class TrackGUI extends JPanel {
         g2.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
         g2.setRenderingHint(RenderingHints.KEY_STROKE_CONTROL, RenderingHints.VALUE_STROKE_PURE);
         
-        // Symbol treble_clef = 
-
         // draw staff lines
         int staffXStart = x_staffBuffer - symbolSize / 2;
         int staffXEnd = getWidth() - x_staffBuffer;
@@ -711,6 +773,7 @@ public class TrackGUI extends JPanel {
             mouseX, mouseY - (int) (symbolSize * activeMusicSymbol.scale), null);
     }
 
+    // re-render rectangles when based off of start and end position of user's mouse
     private Rectangle getMouseDragBox() {
         if (drag_p1 == null || drag_p2 == null) return null;
         int minx = Math.min(drag_p1.x, drag_p2.x);

@@ -34,8 +34,6 @@ public enum MusicSymbol {
     SHARP (6, 5, 1, 0),
     QUARTER_NOTE_EQUALS (2, 5, 1, 0),
     BREATH_MARK (6, 4, 0.5, 0);
-
-    // WHOLE_REST ()
     
     /* These fields are made public so that they can be accessed by other classes, but
      * they are final so that modifications can't be made. The images are references
@@ -114,6 +112,7 @@ public enum MusicSymbol {
         }
     }  
 
+    // return a smaller or bigger image of the music symbol provided
     public static Image getScaledImage(MusicSymbol sym, int size, boolean highlight) {
         double largest = (double) Math.max(sym.width, sym.height);
         int w = (int) (size * sym.width * sym.scale / largest);
@@ -122,6 +121,7 @@ public enum MusicSymbol {
         else return sym.image.getScaledInstance(w, h, Image.SCALE_SMOOTH);
     }
 
+    // return a smaller or bigger image of the music symbol provided
     public static Image getScaledImage(MusicSymbol sym, int size) {
         return getScaledImage(sym, size, false);
     }

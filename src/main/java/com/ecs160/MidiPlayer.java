@@ -37,11 +37,11 @@ public class MidiPlayer extends JPanel {
     }
 
     
-    public Sequence buildSequence() {
+    public Sequence buildSequence(TrackGUI trackpanel) {
         try {
             // Obtain a Sequencer instance
             sequencer.open();
-            sequencer.setTempoInBPM(120);
+            sequencer.setTempoInBPM(trackpanel.getTempo());
 
             // Create a sequence
             Sequence sequence = new Sequence(Sequence.PPQ, 4);
@@ -56,8 +56,6 @@ public class MidiPlayer extends JPanel {
             // Set the sequence to the sequencer and start playing
             for (ArrayList<Symbol> row : this.trackPanel.getRows()) {
                 for (Symbol note : row) {
-                    // System.out.println(note.getX() + " " + note.getY());
-                    // Interesting bug for whole notes, the offset of y position is 60 pixels for all lines
                     int pitch = getNotePitch(note);
                     int noteDuration = note.sym.getDuration();
                     // symbol is a note or rest
@@ -78,10 +76,6 @@ public class MidiPlayer extends JPanel {
     }
 
     public static int getNotePitch(Symbol s) {
-        // get pitch from notes y location
-        // C is at 60, 320, 580... gap between is 260 pixels
-        // lowest note is 170, 430, 690.... (low F) (midi = 49)
-        // highest note is 180, 440, 700... (high high C) = (midi = 60+14 = 74)
         int gridSize = 10;
         int gridHeight = 26;
         int rowHeight = gridHeight * gridSize;
@@ -89,7 +83,7 @@ public class MidiPlayer extends JPanel {
         int vertical_position;
         
         if (s.sym == MusicSymbol.WHOLE)
-            vertical_position = ((s.getBottomY()-60)) % (rowHeight) / gridSize;
+            vertical_position = ((s.getBottomY())) % (rowHeight) / gridSize;
         else
             vertical_position = (s.getBottomY()) % (rowHeight) / gridSize;
         
@@ -135,11 +129,12 @@ public class MidiPlayer extends JPanel {
     }
     
     
-    class PlayButtonListener implements ActionListener {
+    class PlayButtonListener implements ActionListener, MetaEventListener {
         private Thread positionUpdater;
     
         @Override
         public void actionPerformed(ActionEvent e) {
+            // if the user pauses while the music is playing
             if (sequencer.isRunning()) {
                 sequencer.stop();
                 playButton.setText("Play");
@@ -148,7 +143,7 @@ public class MidiPlayer extends JPanel {
                 }
             } else {
                 // check if track has changed
-                Sequence new_sequence = buildSequence();
+                Sequence new_sequence = buildSequence(trackPanel);
                 if (sequencer.getSequence() != null) {
                     long position = (long) (sequencer.getMicrosecondLength() * (positionSlider.getValue() / 100.0));
                     sequencer.setMicrosecondPosition(position);
@@ -159,18 +154,37 @@ public class MidiPlayer extends JPanel {
                         e1.printStackTrace();
                     }
                 }
+                // start playing the sequence / music
+                sequencer.addMetaEventListener(this); // Add MetaEventListener
                 sequencer.start();
                 playButton.setText("Pause");
+                // start thread that adjusts value of the slider
                 positionUpdater = new Thread(new UpdatePositionTask());
                 positionUpdater.start();
             }
         }
+
+    // Implement MetaEventListener to check when the end of sequence is reached
+    @Override
+    public void meta(MetaMessage meta) {
+        if (meta.getType() == 47) { // End of track event
+            // Reset play button, slider, and sequence
+            playButton.setText("Play");
+            sequencer.stop();
+            sequencer.setMicrosecondPosition(0);
+            positionSlider.setValue(0);
+            sequencer.removeMetaEventListener(this); // Remove MetaEventListener
+        }
+    }
     }
         
+    // changes the value of the playback slider via threading
     class UpdatePositionTask implements Runnable {
         @Override
         public void run() {
+            // check if the sequence is playing music
             while (sequencer.isRunning()) {
+                // change position of slider based on position in the sequence
                 long position = sequencer.getMicrosecondPosition();
                 long length = sequencer.getMicrosecondLength();
                 if (length > 0) {

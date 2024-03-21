@@ -37,6 +37,7 @@ public class Main {
                 }
             });
 
+            // add scrollbar to screen
             scrollPane.getViewport().add(trackPanel);
 
             // Add the MenuBar and scroll pane to the frame
@@ -44,6 +45,7 @@ public class Main {
             frame.add(toolBar, BorderLayout.WEST);
             frame.add(scrollPane, BorderLayout.CENTER);
 
+            // create MIDI player for user to play music
             MidiPlayer player = new MidiPlayer(trackPanel);
             frame.add(player, BorderLayout.SOUTH);
 

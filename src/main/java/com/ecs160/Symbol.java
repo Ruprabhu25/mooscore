@@ -112,8 +112,6 @@ class Symbol extends JComponent {
     }
 
     public int getSymbolX() {
-        // ignore the added width of the accidental
-        // System.out.println("x: " + getX() + ", sym x: " + (getX() + (boundWidth - symbolWidth)));
         return getX() + (boundWidth - symbolWidth);
     }
 
