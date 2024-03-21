@@ -3,7 +3,6 @@ package com.ecs160;
 import java.awt.*;
 import java.awt.image.BufferedImage;
 
-import javax.swing.BorderFactory;
 import javax.swing.JComponent;
 
 class Symbol extends JComponent {

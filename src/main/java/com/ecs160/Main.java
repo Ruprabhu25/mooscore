@@ -29,12 +29,9 @@ public class Main {
             int maxWidth = Math.min(1500, (int) (gd.getDisplayMode().getWidth() * 0.65));
             
             // make window full screen 
-            frame.setSize(gd.getDisplayMode().getWidth(), gd.getDisplayMode().getHeight());
-            Dimension trackDimension = new Dimension((int) (maxWidth * 1.29), maxWidth);
-            // System.out.println("dim: " + trackDimension);
-            trackPanel.setMaximumSize(trackDimension);
-            trackPanel.setMinimumSize(trackDimension);
-            trackPanel.setPreferredSize(trackDimension);
+            // frame.setSize(gd.getDisplayMode().getWidth(), gd.getDisplayMode().getHeight());
+            frame.setExtendedState(JFrame.MAXIMIZED_BOTH);
+
             scrollPane.addComponentListener(new ComponentAdapter() {
                 @Override
                 public void componentResized(ComponentEvent e) {
