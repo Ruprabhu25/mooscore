@@ -18,13 +18,13 @@ public class MidiPlayer extends JPanel {
     private JButton playButton;
     private JSlider positionSlider;
     private TrackGUI trackPanel;
-    private static int[] steps = new int[] {2,4,5,7,9,11,0};
 
     public MidiPlayer(TrackGUI trackPanel) {
         // Initialize sequencer
         try {
             sequencer = MidiSystem.getSequencer();
             sequencer.open();
+            sequencer.setLoopCount(0);
         } catch (MidiUnavailableException e) {
             e.printStackTrace();
         }
@@ -35,7 +35,6 @@ public class MidiPlayer extends JPanel {
         playButton.addActionListener(new PlayButtonListener());
 
         positionSlider = new JSlider(JSlider.HORIZONTAL, 0, 100, 0); // Slider for position, from 0 to 100
-        positionSlider.addChangeListener(new PositionSliderListener());
 
         // Add components to the frame
         add(positionSlider);
@@ -43,10 +42,9 @@ public class MidiPlayer extends JPanel {
     }
 
     
-    public void buildAndPlaySequence() {
+    public Sequence buildSequence() {
         try {
             // Obtain a Sequencer instance
-            Sequencer sequencer = MidiSystem.getSequencer();
             sequencer.open();
             sequencer.setTempoInBPM(120);
 
@@ -63,8 +61,8 @@ public class MidiPlayer extends JPanel {
             // Set the sequence to the sequencer and start playing
             for (ArrayList<Symbol> row : this.trackPanel.getRows()) {
                 for (Symbol note : row) {
-                    System.out.println(note.getX() + " " + note.getY());
-                    //Interesting bug for whole notes, the offset of y position is 60 pixels for all lines
+                    // System.out.println(note.getX() + " " + note.getY());
+                    // Interesting bug for whole notes, the offset of y position is 60 pixels for all lines
                     int pitch = getNotePitch(note);
                     int noteDuration = note.sym.getDuration();
                     // symbol is a note or rest
@@ -77,44 +75,51 @@ public class MidiPlayer extends JPanel {
                     }
                 }
             }
-            sequencer.setSequence(sequence);
-            sequencer.start();
+            return sequence;
         } catch (MidiUnavailableException | InvalidMidiDataException e) {
             e.printStackTrace();
+            return null;
         }
     }
 
     public static int getNotePitch(Symbol s) {
         // get pitch from notes y location
-        //C is at 60, 320, 580... gap between is 260 pixels
-        //lowest note is 170, 430, 690.... (low F) (midi = 49)
-        //highest note is 180, 440, 700... (high high C) = (midi = 60+14 = 74)
+        // C is at 60, 320, 580... gap between is 260 pixels
+        // lowest note is 170, 430, 690.... (low F) (midi = 49)
+        // highest note is 180, 440, 700... (high high C) = (midi = 60+14 = 74)
         int gridSize = 10;
         int gridHeight = 26;
+        int rowHeight = gridHeight * gridSize;
+        int c_pitch = 60;
         int vertical_position;
+        
         if (s.sym == MusicSymbol.WHOLE)
-            vertical_position = ((s.getY()-60) / gridSize) % (gridHeight * gridSize);
+            vertical_position = ((s.getBottomY()-60)) % (rowHeight) / gridSize;
         else
-            vertical_position = (s.getY() / gridSize) % (gridHeight * gridSize);
-        int[] steps2 = new int[] {2,4,5,7,9,11,0};
-        int[] steps3 = new int[] {2,4,5,7,9,11,12};
-        int distance_from_center = ((-1 * (vertical_position - 6)) % 26);
+            vertical_position = (s.getBottomY()) % (rowHeight) / gridSize;
+        
+        // System.out.println(vertical_position);
+        int[] steps2 = {2,4,5,7,9,11,0};
+        int[] steps3 = {2,4,5,7,9,11,12};
+        
+        int distance_from_center = ((-1 * (vertical_position - 6)) % gridHeight);
+        
         int pitch_from_mid_c = 0;
         if (distance_from_center > 0)
             pitch_from_mid_c = ((distance_from_center / 7) * 12) + steps2[(distance_from_center - 1) % 7];
         if (distance_from_center < 0)
             pitch_from_mid_c = ((distance_from_center / 7) * 12) - (12 - steps3[(steps3.length + (distance_from_center % 7) - 1) % 7]);
-        System.out.println("vertical " + vertical_position + " distance " + distance_from_center + " pitch " + (12 - steps3[(steps3.length + (distance_from_center % 7) - 1) % 7]));
+        
         if (s.getAccidental() == MusicSymbol.SHARP)
             pitch_from_mid_c += 1;
         if (s.getAccidental() == MusicSymbol.FLAT)
             pitch_from_mid_c -= 1;
-        return 60 + pitch_from_mid_c;
+        
+        return c_pitch + pitch_from_mid_c;
     }
 
     public static void addNote(Track track, int channel, int pitch, int velocity, int duration, int start_tick) {
         try {
-            //System.out.println(channel + " " + pitch + " " + velocity + " " + start_tick);
             track.add(createNoteOnEvent(channel, pitch, velocity, start_tick));
             track.add(createNoteOffEvent(channel, pitch, start_tick + duration));
         } catch (InvalidMidiDataException e) {
@@ -134,6 +139,33 @@ public class MidiPlayer extends JPanel {
         return new MidiEvent(message, tick);
     }
     
+    private static boolean areTracksEqual(Track track1, Track track2) {
+        if (track1.size() != track2.size()) 
+            return false;
+
+        for (int i = 0; i < track1.size(); i++) {
+            MidiEvent event1 = track1.get(i);
+            MidiEvent event2 = track2.get(i);
+            if (!areEventsEqual(event1, event2)) 
+                  return false;
+        }
+
+        return true;
+    }
+
+    private static boolean areEventsEqual(MidiEvent event1, MidiEvent event2) {
+        // not at same time
+        if (event1.getTick() != event2.getTick()) 
+            return false;
+
+        // not the same message 
+        if (!event1.getMessage().equals(event2.getMessage())) 
+            return false;
+
+        return true;
+    }
+
+    
     class PlayButtonListener implements ActionListener {
         private Thread positionUpdater;
     
@@ -146,25 +178,31 @@ public class MidiPlayer extends JPanel {
                     positionUpdater.interrupt();
                 }
             } else {
+                // check if track has changed
+                Sequence new_sequence = buildSequence();
+                Track new_track = new_sequence.getTracks()[0];
+                if (sequencer.getSequence() != null) {
+                    // if (areTracksEqual(new_track, sequencer.getSequence().getTracks()[0])) {
+                        // if it has not changed, get position on slider and play from there 
+                        long position = (long) (sequencer.getMicrosecondLength() * (positionSlider.getValue() / 100.0));
+                        sequencer.setMicrosecondPosition(position);
+                        // changed = false;
+                    // }
+                } else {
+                    try {
+                        sequencer.setSequence(new_sequence);
+                    } catch (InvalidMidiDataException e1) {
+                        e1.printStackTrace();
+                    }
+                }
                 sequencer.start();
-                playButton.setText("Stop");
+                playButton.setText("Pause");
                 positionUpdater = new Thread(new UpdatePositionTask());
                 positionUpdater.start();
             }
         }
     }
-    
-
-    class PositionSliderListener implements ChangeListener {
-        @Override
-        public void stateChanged(ChangeEvent e) {
-            if (!positionSlider.getValueIsAdjusting()) {
-                long position = (long) (sequencer.getMicrosecondLength() * (positionSlider.getValue() / 100.0));
-                sequencer.setMicrosecondPosition(position);
-            }
-        }
-    }
-    
+        
     class UpdatePositionTask implements Runnable {
         @Override
         public void run() {
@@ -176,7 +214,7 @@ public class MidiPlayer extends JPanel {
                     positionSlider.setValue(value);
                 }
                 try {
-                    Thread.sleep(100); // Update every 100 milliseconds
+                    Thread.sleep(30); // Update every 100 milliseconds
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }

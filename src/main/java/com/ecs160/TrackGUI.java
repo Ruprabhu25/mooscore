@@ -4,6 +4,7 @@ import javax.swing.border.EmptyBorder;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
+import java.awt.image.BufferedImage;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
@@ -112,8 +113,12 @@ class ToolBar extends JPanel {
     
     private void addSymbolButton(MusicSymbol sym, JToolBar toolBar, TrackGUI gui) {
         int image_size = 50;
-        JButton button = new JButton(new ImageIcon(MusicSymbol.getScaledImage(sym, image_size)));
-        button.setPreferredSize(new Dimension(image_size, image_size));
+        BufferedImage icon = new BufferedImage(image_size, image_size, BufferedImage.TYPE_INT_ARGB);
+        Image sym_image = MusicSymbol.getScaledImage(sym, (int) (image_size / sym.scale));
+        icon.getGraphics().drawImage(sym_image, 
+            (image_size - sym_image.getWidth(null)) / 2, 
+            (image_size - sym_image.getHeight(null)) / 2, null);
+        JButton button = new JButton(new ImageIcon(icon));
         toolBar.add(button);
         button.addActionListener(new ActionListener() {
             @Override
@@ -125,8 +130,13 @@ class ToolBar extends JPanel {
 
     private void addAccidentalButton(MusicSymbol accidental, JToolBar toolBar, TrackGUI gui) {
         int image_size = 50;
-        JButton button = new JButton(new ImageIcon(MusicSymbol.getScaledImage(accidental, image_size)));
-        button.setPreferredSize(new Dimension(image_size, image_size));
+        BufferedImage icon = new BufferedImage(image_size, image_size, BufferedImage.TYPE_INT_ARGB);
+        Image sym_image = MusicSymbol.getScaledImage(accidental, (int) (image_size / accidental.scale));
+        icon.getGraphics().drawImage(sym_image, 
+            (image_size - sym_image.getWidth(null)) / 2, 
+            (image_size - sym_image.getHeight(null)) / 2, null);
+        JButton button = new JButton(new ImageIcon(icon));
+
         toolBar.add(button);
         button.addActionListener(new ActionListener() {
             @Override
@@ -151,7 +161,7 @@ class ToolBar extends JPanel {
         for (MusicSymbol n : notes) addSymbolButton(n, toolBar, gui);
         
         MusicSymbol rests[] = {MusicSymbol.SIXTEENTH_REST, MusicSymbol.EIGTH_REST,
-            MusicSymbol.QUARTER_REST, MusicSymbol.HALF_REST, MusicSymbol.WHOLE_REST};
+            MusicSymbol.QUARTER_REST, MusicSymbol.HALF_REST};
         for (MusicSymbol r : rests) addSymbolButton(r, toolBar, gui);
 
         MusicSymbol accidentals[] = {MusicSymbol.FLAT, MusicSymbol.SHARP, MusicSymbol.NATURAL};
@@ -185,6 +195,8 @@ public class TrackGUI extends JPanel {
     private ArrayList<ArrayList<Symbol>> rows; 
     private MusicSymbol activeMusicSymbol;
 
+    // this keeps track of if the track has been changed in between playback
+
     private JTextField titleField;
     private JTextField subtitleField;
     private JTextField composerField;
@@ -195,6 +207,16 @@ public class TrackGUI extends JPanel {
     
     public TrackGUI() {
         setLayout(null); // Use absolute positioning
+        GraphicsDevice gd = GraphicsEnvironment.getLocalGraphicsEnvironment().getDefaultScreenDevice();
+        
+        int maxWidth = Math.min(1500, (int) (gd.getDisplayMode().getWidth() * 0.4));
+        // set max size, 1.29 times taller than wider for 8.5x11 feel
+        Dimension trackDimension = new Dimension((int) maxWidth, (int) (maxWidth * 1.29));
+        // System.out.println("dim: " + trackDimension);
+        setMaximumSize(trackDimension);
+        setMinimumSize(trackDimension);
+        setPreferredSize(trackDimension);
+
         // add text inputs
         addTempo();
         addTitlesComposer();
@@ -203,8 +225,8 @@ public class TrackGUI extends JPanel {
         measureLocations = new ArrayList<Point>();
         selected = new ArrayList<Symbol>();
         rows = new ArrayList<ArrayList<Symbol>>();
+        updateRows();
         activeMusicSymbol = null;
-        
 
 
         setFocusable(true); // Enable keyboard focus
@@ -382,19 +404,19 @@ public class TrackGUI extends JPanel {
     private void addTitlesComposer() {
         titleField = new JTextField("My Music");
         titleField.setFont(new Font("Arial", Font.BOLD, 24));
-        titleField.setBounds(getWidth() / 2, 10, 300, 30);
+        titleField.setBounds(getPreferredSize().width / 2, 10, 300, 30);
         titleField.setOpaque(false);
         titleField.setBorder(new EmptyBorder(5, 10, 5, 10));
 
         subtitleField = new JTextField("Sub Title");
         subtitleField.setFont(new Font("Arial", Font.ITALIC, 18));
-        subtitleField.setBounds(getWidth() / 2, 40, 300, 30);
+        subtitleField.setBounds(getPreferredSize().width / 2, 40, 300, 30);
         subtitleField.setOpaque(false);
         subtitleField.setBorder(new EmptyBorder(5, 10, 5, 10));
 
         composerField = new JTextField("Composer");
         composerField.setFont(new Font("Arial", Font.BOLD, 18));
-        composerField.setBounds(getWidth() - 200, 60, 300, 30);
+        composerField.setBounds(getPreferredSize().width - 200, 60, 300, 30);
         composerField.setOpaque(false);
         composerField.setBorder(new EmptyBorder(5, 10, 5, 10));
 
@@ -467,13 +489,6 @@ public class TrackGUI extends JPanel {
         calculateMeasureLocations();
     }
 
-    private void createNewSymbol(MusicSymbol newSym) {
-        int x = (int) (Math.random() * 400); // Random x position
-        int y = (int) (Math.random() * 400); // Random y position
-        Point gridPoint = getGridPoint(x, y);
-        createNewSymbol(newSym, gridPoint.x, gridPoint.y);
-    }
-
     private void moveSymbol(Symbol s, int x, int y) {
         // clamp x coordinates onto staff
         x = Math.max(x_staffBuffer, x);
@@ -533,11 +548,12 @@ public class TrackGUI extends JPanel {
                 // shift following notes to fit within measures 
                 if (i == row.size()-1) continue; // this is the last element
                 Symbol next = row.get(i+1);
-                System.out.println("x: " + x + ", next_x:" + next.getSymbolX());
-                if (next.getSymbolX() < (x + gridSize*2))  {  
-                    // System.out.println("shifting ");
+
+                // if it is too close, move it away 
+                if (next.getSymbolX() < (x + gridSize*2)) 
                     shiftSymbols(r, next.getSymbolX(), getWidth(), ((x - next.getSymbolX()) / gridSize) + 2);
-                }
+                
+                    // if it is too far, move it closer
                 if (next.getSymbolX() > (x + gridSize*6)) 
                     shiftSymbols(r, next.getSymbolX(), getWidth(), (x - next.getSymbolX())/ gridSize + 6);
             }
@@ -596,7 +612,7 @@ public class TrackGUI extends JPanel {
                 else continue;
                 for (int i = 0; (lineStart + i) < lineEnd; i += 2) {
                     int y = (lineStart + i) * gridSize; 
-                    g2.drawLine(s.getSymbolX() + 3, y, s.getX() + symbolSize / 5, y);
+                    g2.drawLine(s.getSymbolX() + 3, y, s.getSymbolX() + symbolSize / 5, y);
                 }
             }
 

@@ -3,7 +3,6 @@ package com.ecs160;
 import java.awt.*;
 import java.awt.image.BufferedImage;
 
-import javax.swing.BorderFactory;
 import javax.swing.JComponent;
 
 class Symbol extends JComponent {
@@ -81,10 +80,6 @@ class Symbol extends JComponent {
 
         // update the bounds of the symbol as a component
         setBounds(getX(), getY(), boundWidth, boundHeight);
-    }
-
-    public MusicSymbol getAccidental() {
-        return this.accidental;
     }
 
     public void setAccidental(MusicSymbol newAccidental) {
