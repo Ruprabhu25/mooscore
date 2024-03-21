@@ -5,6 +5,12 @@ import javax.swing.border.EmptyBorder;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
@@ -41,12 +47,14 @@ class MenuBar extends JPanel {
                 saveMenuItem.addActionListener(new ActionListener() {
                     @Override
                     public void actionPerformed(ActionEvent e) {
+                        saveToFile(gui);
                     }
                 });
                 
                 loadMenuItem.addActionListener(new ActionListener() {
                     @Override
                     public void actionPerformed(ActionEvent e) {
+                        loadFromFile(gui);
                     }
                 });
                 
@@ -106,6 +114,51 @@ class MenuBar extends JPanel {
         setLayout(new BorderLayout());
         add(MenuBar, BorderLayout.NORTH);
     }
+
+    private void saveToFile(TrackGUI gui) {
+        JFileChooser fileChooser = new JFileChooser();
+        fileChooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
+        int option = fileChooser.showOpenDialog(this);
+        if (option == JFileChooser.APPROVE_OPTION) {
+            String selectedDirectory = fileChooser.getSelectedFile().getAbsolutePath();
+            System.out.println("Selected Directory: " + selectedDirectory);
+            File file = new File(selectedDirectory + File.separator + gui.getTitle() + ".dat");
+            Component[] components = gui.getComponents();
+            try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(file))) {
+                for (Component component : components) {
+                    oos.writeObject(component);
+                }
+                System.out.println("Components saved successfully.");
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    private void loadFromFile(TrackGUI gui) {
+        JFileChooser fileChooser = new JFileChooser();
+        fileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
+        int option = fileChooser.showOpenDialog(this);
+        if (option == JFileChooser.APPROVE_OPTION) {
+            String selectedFile = fileChooser.getSelectedFile().getAbsolutePath();
+            try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(selectedFile))) {
+            while (true) {
+                try {
+                    Component component = (Component) ois.readObject();
+                    if (component instanceof Symbol) {
+                        Symbol s = (Symbol) component;
+                        gui.createNewSymbol(s.sym, s.getX(), s.getY());
+                    }
+                } catch (ClassNotFoundException e) {
+                    e.printStackTrace();
+                }
+            }
+        } catch (IOException e) {
+            // End of file reached or file does not exist
+            System.out.println("Components loaded successfully.");
+        }
+    }
+}
 }
 
 class ToolBar extends JPanel {
@@ -356,6 +409,10 @@ public class TrackGUI extends JPanel {
         });
     }
 
+    public String getTitle() {
+        return title;
+    }
+
     private void addTitlesComposer() {
         titleField = new JTextField(title);
         titleField.setFont(new Font("Arial", Font.BOLD, 24));
@@ -374,31 +431,6 @@ public class TrackGUI extends JPanel {
         composerField.setBounds(getWidth() - 200, 60, 300, 30);
         composerField.setOpaque(false);
         composerField.setBorder(new EmptyBorder(5, 10, 5, 10));
-
-        // titleField.addActionListener(new ActionListener() {
-        //     @Override
-        //     public void actionPerformed(ActionEvent e) {
-        //         title = titleField.getText();
-        //         repaint();
-        //     }
-        // });
-
-        // subtitleField.addActionListener(new ActionListener() {
-        //     @Override
-        //     public void actionPerformed(ActionEvent e) {
-        //         title = titleField.getText();
-        //         repaint();
-        //     }
-        // });
-
-        // composerField.addActionListener(new ActionListener() {
-        //     @Override
-        //     public void actionPerformed(ActionEvent e) {
-        //         composer = composerField.getText();
-        //         repaint();
-        //     }
-        // });
-
         // Add the text field to the panel
         add(titleField);
         add(subtitleField);
@@ -458,7 +490,7 @@ public class TrackGUI extends JPanel {
         return out;
     }
 
-    private void createNewSymbol(MusicSymbol newSym, int x, int y) {
+    public void createNewSymbol(MusicSymbol newSym, int x, int y) {
         // align symbol to grid
         Point grid_point = getGridPoint(x, y);
         Symbol symbol = new Symbol(newSym, grid_point.x, grid_point.y);
@@ -526,7 +558,6 @@ public class TrackGUI extends JPanel {
                     shiftSymbols(r, next.getSymbolX(), getWidth(), (x - next.getSymbolX())/ gridSize + 6);
             }
         }
-        // System.out.println(measureLocations);
     }
 
     private ArrayList<Symbol> getSymbolsInXOrder() {
@@ -659,7 +690,6 @@ public class TrackGUI extends JPanel {
             frame.add(toolBar, BorderLayout.WEST);
             frame.add(scrollPane, BorderLayout.CENTER);
 
-            //BottomPanel bottomPanel = new BottomPanel();
             MidiPlayer player = new MidiPlayer(trackPanel);
             frame.add(player, BorderLayout.SOUTH);
 
