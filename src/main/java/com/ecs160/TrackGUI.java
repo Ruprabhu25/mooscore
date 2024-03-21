@@ -154,7 +154,7 @@ public class TrackGUI extends JPanel {
     // The staff is drawn in the center of this region
     private final int gridHeight = 26;
     // number of blank pixels on left and right of staff lines
-    private final int staffBuffer = 100;
+    private int x_staffBuffer = 100;
     // this is the max dimension of every symbol. for example a quarter note has this height
     private int symbolSize = gridSize * 8;
     // these points define the start and end of the users drag pox
@@ -185,7 +185,8 @@ public class TrackGUI extends JPanel {
     public TrackGUI() {
         setLayout(null); // Use absolute positioning
         addTempo();
-
+        // set limits on the size of the component
+        setMaximumSize(new Dimension(2000, 1800)); 
         measureLocations = new ArrayList<Point>();
         selected = new ArrayList<Symbol>();
         rows = new ArrayList<ArrayList<Symbol>>();
@@ -204,6 +205,9 @@ public class TrackGUI extends JPanel {
                 int dx = 0; 
                 int dy = 0;
                 switch (e.getKeyCode()) {
+
+                    // moving selected items
+                    
                     case KeyEvent.VK_LEFT:
                     case KeyEvent.VK_A:
                         dx = -gridSize;
@@ -220,10 +224,22 @@ public class TrackGUI extends JPanel {
                     case KeyEvent.VK_S:
                         dy = gridSize;
                         break;
+                    
+                    // add accidentals
+                    case KeyEvent.VK_F:
+                        for (Symbol s : selected) s.setAccidental(MusicSymbol.FLAT);
+                        break;
+                    case KeyEvent.VK_N:
+                        for (Symbol s : selected) s.setAccidental(MusicSymbol.NATURAL);
+                        break;
+                    case KeyEvent.VK_H:
+                        for (Symbol s : selected) s.setAccidental(MusicSymbol.SHARP);
+                        break;
+                    
+                    // delete selected items
                     case KeyEvent.VK_BACK_SPACE:
                     case KeyEvent.VK_DELETE:
                         activeMusicSymbol = null; // clear active note
-                        // delete selected components
                         for (Symbol s: selected) remove(s);
                         break;
                     case KeyEvent.VK_ESCAPE:
@@ -233,7 +249,7 @@ public class TrackGUI extends JPanel {
                         clearSelection();
                 }
                 for (Symbol s : selected) 
-                    moveSymbol(s, s.getX() + dx, s.getY() + dy);
+                    moveSymbol(s, s.getSymbolX() + dx, s.getY() + dy);
                 calculateMeasureLocations();
                 return (!selected.isEmpty());
             }
@@ -244,7 +260,6 @@ public class TrackGUI extends JPanel {
             public void mousePressed(MouseEvent e) {
                 drag_p1 = e.getPoint();
                 
-                System.out.println(e.getX() + ", " + e.getY());
                 last_clickX = e.getX();
                 last_clickY = e.getY();
                 // check if shift is held
@@ -312,7 +327,7 @@ public class TrackGUI extends JPanel {
                 if (!selected.isEmpty()) {
                     int dx = e.getX() - last_clickX;
                     int dy = e.getY() - last_clickY;
-                    for (Symbol s : selected) moveSymbol(s, s.getX() + dx, s.getY() + dy);
+                    for (Symbol s : selected) moveSymbol(s, s.getSymbolX() + dx, s.getSymbolY() + dy);
                     Point lastGridPoint = getGridPoint(last_clickX + dx, last_clickY + dy);
                     last_clickX = lastGridPoint.x;
                     last_clickY = lastGridPoint.y;
@@ -328,6 +343,16 @@ public class TrackGUI extends JPanel {
                 mouseY = e.getY();
                 repaint();
             }
+        });
+        
+        addComponentListener( new ComponentAdapter() {
+            @Override
+            public void componentResized(ComponentEvent e) {
+                // reset the staff buffer if necessary
+                if (getWidth() > getMaximumSize().width) {
+                    x_staffBuffer = (int) ((getWidth() - getMaximumSize().width) / 2);
+                } 
+            };
         });
     }
 
@@ -420,9 +445,9 @@ public class TrackGUI extends JPanel {
     // moves everything in row row between x_start and x_end x_grid_shift spaces
     private void shiftSymbols(int row, int x_start, int x_end, int x_grid_shift) {
         for (Symbol s : rows.get(row)) {
-            if (s.getX() < x_start) continue;
-            if (s.getX() > x_end) break;
-            moveSymbol(s, s.getX() + x_grid_shift * gridSize, s.getY());
+            if (s.getSymbolX() < x_start) continue;
+            if (s.getSymbolX() > x_end) break;
+            moveSymbol(s, s.getSymbolX() + x_grid_shift * gridSize, s.getY());
         }
     }
 
@@ -436,7 +461,6 @@ public class TrackGUI extends JPanel {
     private void createNewSymbol(MusicSymbol newSym, int x, int y) {
         // align symbol to grid
         Point grid_point = getGridPoint(x, y);
-        System.out.println(grid_point);
         Symbol symbol = new Symbol(newSym, grid_point.x, grid_point.y);
         symbol.resize((int) (symbolSize * newSym.scale));
         add(symbol);
@@ -452,8 +476,8 @@ public class TrackGUI extends JPanel {
 
     private void moveSymbol(Symbol s, int x, int y) {
         // clamp x coordinates onto staff
-        x = Math.max(staffBuffer, x);
-        x = Math.min(x, getWidth() - 100);
+        x = Math.max(x_staffBuffer, x);
+        x = Math.min(x, getWidth() - x_staffBuffer);
         Point gridPoint = getGridPoint(x, y);
         s.setLocation(gridPoint);
     }
@@ -468,8 +492,7 @@ public class TrackGUI extends JPanel {
             while (rows.size() < (row + 2)) rows.add(new ArrayList<Symbol>());
             rows.get(row).add(s);
         }
-        for (ArrayList<Symbol> row : rows) System.out.println(row.size());
-        // System.out.println(rows.size());
+        // for (ArrayList<Symbol> row : rows) System.out.println(row.size());
         repaint();
     }
 
@@ -485,7 +508,7 @@ public class TrackGUI extends JPanel {
                 Symbol s= row.get(i);
                 int duration = Math.abs(s.sym.noteDuration);
                 // skip non note symbols, overlapping symbols
-                if (duration == 0 || s.getX() == prev.getX()) continue;
+                if (duration == 0 || s.getSymbolX() == prev.getSymbolX()) continue;
                 prev = s;
                 ticks += duration;
                 // invalid measure state, break early
@@ -493,26 +516,26 @@ public class TrackGUI extends JPanel {
                 if (ticks < measureLength) continue;
                 // a measure has been completed, add measure location
                 ticks = 0;
-                int x = s.getX() + gridSize * 7;
+                int x = s.getSymbolX() + gridSize * 7;
                 measureLocations.add(new Point(x, r));
                 
                 if (i == row.size()-1) continue; // this is the last element
                 Symbol next = row.get(i+1);
-                if (next.getX() < x + gridSize*2) 
-                    shiftSymbols(r, next.getX(), getWidth(), ((x - next.getX()) / gridSize) + 2);
-                if (next.getX() > (x + gridSize*6)) 
-                    shiftSymbols(r, next.getX(), getWidth(), (x - next.getX())/ gridSize + 6);
+                if (next.getSymbolX() < x + gridSize*2) 
+                    shiftSymbols(r, next.getSymbolX(), getWidth(), ((x - next.getSymbolX()) / gridSize) + 2);
+                if (next.getSymbolX() > (x + gridSize*6)) 
+                    shiftSymbols(r, next.getSymbolX(), getWidth(), (x - next.getSymbolX())/ gridSize + 6);
             }
         }
-        System.out.println(measureLocations);
+        // System.out.println(measureLocations);
     }
 
     private ArrayList<Component> getComponentsInXOrder() {
         ArrayList<Component> children = new ArrayList<Component>(Arrays.asList(getComponents()));
-        children.sort(Comparator.comparing(Component::getX));
+        
+        children.sort(Comparator.comparing(Component::getSymbolX));
         int i = 0;
         while (i < children.size()) 
-            if (!(children.get(i) instanceof Symbol)) children.remove(i);
             else i++;
         return children;
     }
@@ -527,8 +550,8 @@ public class TrackGUI extends JPanel {
         g2.setRenderingHint(RenderingHints.KEY_STROKE_CONTROL, RenderingHints.VALUE_STROKE_PURE);
         
         // draw staff lines
-        int staffXStart = 100;
-        int staffXEnd = getWidth() - 100;
+        int staffXStart = x_staffBuffer;
+        int staffXEnd = getWidth() - x_staffBuffer;
         for (int r = 0; r < rows.size(); r++) {
             int gridCenter = r * (gridHeight) + ((gridHeight / 2) + 1);
             int staffCenter = gridCenter * gridSize;
@@ -551,7 +574,6 @@ public class TrackGUI extends JPanel {
                     lineEnd = gridCenter - 4;
                 }
                 else continue;
-                // System.out.println(lineStart + ", " + lineEnd);
                 for (int i = 0; (lineStart + i) < lineEnd; i += 2) {
                     int y = (lineStart + i) * gridSize; 
                     g2.drawLine(s.getX() + 3, y, s.getX() + symbolSize / 5, y);
@@ -603,21 +625,26 @@ public class TrackGUI extends JPanel {
             // Create a JFrame
             JFrame frame = new JFrame("Draggable Container");
             frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-            frame.setSize(1000, 1000);
-
+            
             // Create a draggable container
             TrackGUI trackPanel = new TrackGUI();
-
+            
             // Create a MenuBar
             MenuBar menuBar = new MenuBar(trackPanel);
             ToolBar toolBar = new ToolBar(trackPanel);
-
+            
             // Create a JScrollPane to add the draggable container with scrollbars
             JScrollPane scrollPane = new JScrollPane();
-            // scrollPane.setPreferredSize(new Dimension(1000, 1000));
-            trackPanel.setPreferredSize(new Dimension(1000, 1000));
-            trackPanel.setMinimumSize(new Dimension(1000, 1000));
-            trackPanel.setSize(1000, 1000);
+
+            // get size of the current user screen 
+            GraphicsDevice gd = GraphicsEnvironment.getLocalGraphicsEnvironment().getDefaultScreenDevice();
+            int maxWidth = (int) (gd.getDisplayMode().getWidth() * 0.65);
+            frame.setSize(gd.getDisplayMode().getWidth(), gd.getDisplayMode().getHeight());
+            Dimension trackDimension = new Dimension((int) (maxWidth * 1.29), maxWidth);
+            System.out.println("dim: " + trackDimension);
+            trackPanel.setMaximumSize(trackDimension);
+            trackPanel.setMinimumSize(trackDimension);
+            trackPanel.setPreferredSize(trackDimension);
             scrollPane.addComponentListener(new ComponentAdapter() {
                 @Override
                 public void componentResized(ComponentEvent e) {
