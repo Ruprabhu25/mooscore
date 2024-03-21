@@ -18,6 +18,7 @@ public class MidiPlayer extends JPanel {
     private JButton playButton;
     private JSlider positionSlider;
     private TrackGUI trackPanel;
+    private static int[] steps = new int[] {2,4,5,7,9,11,0};
 
     public MidiPlayer(TrackGUI trackPanel) {
         // Initialize sequencer
@@ -71,7 +72,6 @@ public class MidiPlayer extends JPanel {
                         cur_tick += Math.abs(noteDuration);
                     }
                     else if (noteDuration > 0) {
-                        System.out.println("Duration " + noteDuration);
                         addNote(track, channel, pitch, velocity, noteDuration, cur_tick);
                         cur_tick += Math.abs(noteDuration);
                     }
@@ -96,9 +96,20 @@ public class MidiPlayer extends JPanel {
             vertical_position = ((s.getY()-60) / gridSize) % (gridHeight * gridSize);
         else
             vertical_position = (s.getY() / gridSize) % (gridHeight * gridSize);
-        // the center of the staff should be C = 60
-        int distance_from_center = (vertical_position - gridHeight / 2);
-        return 60 - (distance_from_center * 2); 
+        int[] steps2 = new int[] {2,4,5,7,9,11,0};
+        int[] steps3 = new int[] {2,4,5,7,9,11,12};
+        int distance_from_center = ((-1 * (vertical_position - 6)) % 26);
+        int pitch_from_mid_c = 0;
+        if (distance_from_center > 0)
+            pitch_from_mid_c = ((distance_from_center / 7) * 12) + steps2[(distance_from_center - 1) % 7];
+        if (distance_from_center < 0)
+            pitch_from_mid_c = ((distance_from_center / 7) * 12) - (12 - steps3[(steps3.length + (distance_from_center % 7) - 1) % 7]);
+        System.out.println("vertical " + vertical_position + " distance " + distance_from_center + " pitch " + (12 - steps3[(steps3.length + (distance_from_center % 7) - 1) % 7]));
+        if (s.getAccidental() == MusicSymbol.SHARP)
+            pitch_from_mid_c += 1;
+        if (s.getAccidental() == MusicSymbol.FLAT)
+            pitch_from_mid_c -= 1;
+        return 60 + pitch_from_mid_c;
     }
 
     public static void addNote(Track track, int channel, int pitch, int velocity, int duration, int start_tick) {

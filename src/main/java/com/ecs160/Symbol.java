@@ -83,6 +83,10 @@ class Symbol extends JComponent {
         setBounds(getX(), getY(), boundWidth, boundHeight);
     }
 
+    public MusicSymbol getAccidental() {
+        return this.accidental;
+    }
+
     public void setAccidental(MusicSymbol newAccidental) {
         accidental = newAccidental;
         // clear accidental if arg is null
