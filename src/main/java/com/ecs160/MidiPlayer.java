@@ -11,13 +11,15 @@ import javax.swing.event.ChangeListener;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.util.ArrayList;
 
 public class MidiPlayer extends JPanel {
     private Sequencer sequencer;
     private JButton playButton;
     private JSlider positionSlider;
+    private static TrackGUI trackPanel;
 
-    public MidiPlayer() {
+    public MidiPlayer(TrackGUI trackPanel) {
         // Initialize sequencer
         try {
             sequencer = MidiSystem.getSequencer();
@@ -26,6 +28,7 @@ public class MidiPlayer extends JPanel {
             e.printStackTrace();
         }
 
+        this.trackPanel = trackPanel;
         // Create GUI components
         playButton = new JButton("Play");
         playButton.addActionListener(new PlayButtonListener());
@@ -44,6 +47,7 @@ public class MidiPlayer extends JPanel {
             // Obtain a Sequencer instance
             Sequencer sequencer = MidiSystem.getSequencer();
             sequencer.open();
+            sequencer.setTempoInBPM(120);
 
             // Create a sequence
             Sequence sequence = new Sequence(Sequence.PPQ, 4);
@@ -54,12 +58,25 @@ public class MidiPlayer extends JPanel {
             // Add some notes to the track (example: C major scale)
             int channel = 0;
             int velocity = 50;
-            int noteDuration = 4; // quarter note duration in ticks
-
-            for (int i = 60; i <= 72; i += 1) { // C major scale from middle C (MIDI note 60)
-                addNote(track, channel, i, velocity + i * 10, noteDuration, i * 4 * 2);
-            }
+            int cur_tick = 0;
             // Set the sequence to the sequencer and start playing
+            for (ArrayList<Symbol> row : trackPanel.getRows()) {
+                for (Symbol note : row) {
+                    System.out.println(note.getX() + " " + note.getY());
+                    //Interesting bug for whole notes, the offset of y position is 60 pixels for all lines
+                    int pitch = getNotePitch(note);
+                    int noteDuration = note.sym.getDuration() / 4;
+                    // symbol is a note or rest
+                    if (noteDuration == 0) {
+                        cur_tick += Math.abs(noteDuration);
+                    }
+                    if (noteDuration > 0) {
+                        System.out.println("Duration " + noteDuration);
+                        addNote(track, channel, pitch, velocity, noteDuration, cur_tick);
+                        cur_tick += Math.abs(noteDuration);
+                    }
+                }
+            }
             sequencer.setSequence(sequence);
             sequencer.start();
         } catch (MidiUnavailableException | InvalidMidiDataException e) {
@@ -67,8 +84,22 @@ public class MidiPlayer extends JPanel {
         }
     }
 
+    public static int getNotePitch(Symbol s) {
+        // get pitch from notes y location
+        //C is at 60, 320, 580... gap between is 260 pixels
+        //lowest note is 170, 430, 690.... (low F) (midi = 49)
+        //highest note is 180, 440, 700... (high high C) = (midi = 60+14 = 74)
+        int gridSize = 10;
+        int gridHeight = 26;
+        int vertical_position = (s.getY() / gridSize) % (gridHeight * gridSize);
+        // the center of the staff should be C = 60
+        int distance_from_center = (vertical_position - gridHeight / 2);
+        return 60 - distance_from_center;
+    }
+
     public static void addNote(Track track, int channel, int pitch, int velocity, int duration, int start_tick) {
         try {
+            //System.out.println(channel + " " + pitch + " " + velocity + " " + start_tick);
             track.add(createNoteOnEvent(channel, pitch, velocity, start_tick));
             track.add(createNoteOffEvent(channel, pitch, start_tick + duration));
         } catch (InvalidMidiDataException e) {
@@ -100,13 +131,7 @@ public class MidiPlayer extends JPanel {
                 sequencer.stop();
                 playButton.setText("Play");
             } else {
-                /*try {
-                    sequencer.setSequence(/* Provide your MIDI sequence here);
-                    sequencer.start();
-                    playButton.setText("Stop");
-                } catch (InvalidMidiDataException | MidiUnavailableException ex) {
-                    ex.printStackTrace();
-                }*/
+                buildAndPlaySequence();
             }
         }
     }
