@@ -69,6 +69,8 @@ class Symbol extends JComponent {
     public void resize(int size) {
         // update the size of the component
         this.size = size;
+        // figure out if is wider or taller, the largest axis
+        // is set to size and the other one is kept at the same ratio
         double largest = (double) Math.max(sym.width, sym.height);
         symbolWidth = (int) (size * sym.width / largest);
         symbolHeight = (int) (size * sym.height / largest);
@@ -79,7 +81,7 @@ class Symbol extends JComponent {
         boundHeight = Math.max(symbolHeight, flatHeight);
 
         // update the bounds of the symbol as a component
-        setBounds(getX(), getY(), boundWidth, boundHeight);
+        setBounds(getSymbolX(), getY(), boundWidth, boundHeight);
     }
 
     public void setAccidental(MusicSymbol newAccidental) {
@@ -116,6 +118,13 @@ class Symbol extends JComponent {
         // System.out.println("x: " + getX() + ", sym x: " + (getX() + (boundWidth - symbolWidth)));
         return getX() + (boundWidth - symbolWidth);
     }
+
+    @Override
+    public String toString() {
+        String out = super.toString();
+        System.out.println(out);
+        return out;
+    } 
 
     public void deselect() {
         selected = false;

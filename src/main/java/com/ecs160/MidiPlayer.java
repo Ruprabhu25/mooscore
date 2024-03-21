@@ -53,10 +53,9 @@ public class MidiPlayer extends JPanel {
             int channel = 0;
             int velocity = 50;
             int cur_tick = 0;
-            // Set the sequence to the sequencer and start playing
+            // go through all notes in row order 
             for (ArrayList<Symbol> row : this.trackPanel.getRows()) {
                 for (Symbol note : row) {
-                    // System.out.println(note.getX() + " " + note.getY());
                     // Interesting bug for whole notes, the offset of y position is 60 pixels for all lines
                     int pitch = getNotePitch(note);
                     int noteDuration = note.sym.getDuration();
@@ -133,8 +132,7 @@ public class MidiPlayer extends JPanel {
         message.setMessage(ShortMessage.NOTE_OFF, channel, note, 0);
         return new MidiEvent(message, tick);
     }
-    
-    
+       
     class PlayButtonListener implements ActionListener {
         private Thread positionUpdater;
     

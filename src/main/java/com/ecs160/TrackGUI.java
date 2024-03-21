@@ -94,6 +94,7 @@ class MenuBar extends JPanel {
                                 gui.remove(c);
                             }
                         }
+                        repaint();
                     }
                 });
                 
@@ -339,7 +340,29 @@ public class TrackGUI extends JPanel {
                     case KeyEvent.VK_G:
                         newAccidental = null;
                         break;
-                    
+
+                    // select notes to place
+                    case KeyEvent.VK_1:
+                        if (e.isShiftDown()) setActiveNote(MusicSymbol.WHOLE_REST);
+                        else setActiveNote(MusicSymbol.WHOLE);
+                        break;
+                    case KeyEvent.VK_2:
+                        if (e.isShiftDown()) setActiveNote(MusicSymbol.HALF_REST);
+                        else setActiveNote(MusicSymbol.HALF);
+                        break;
+                    case KeyEvent.VK_3:
+                        if (e.isShiftDown()) setActiveNote(MusicSymbol.QUARTER_REST);
+                        else setActiveNote(MusicSymbol.QUARTER);
+                        break;
+                    case KeyEvent.VK_4:
+                        if (e.isShiftDown()) setActiveNote(MusicSymbol.EIGTH_REST);
+                        else setActiveNote(MusicSymbol.EIGHTH);
+                        break;
+                    case KeyEvent.VK_5:
+                        if (e.isShiftDown()) setActiveNote(MusicSymbol.SIXTEENTH_REST);
+                        else setActiveNote(MusicSymbol.SIXTEENTH);
+                        break;
+
                     // delete selected items
                     case KeyEvent.VK_BACK_SPACE:
                     case KeyEvent.VK_DELETE:
