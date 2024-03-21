@@ -73,23 +73,33 @@ class MenuBar extends JPanel {
                 JPopupMenu popupMenu = new JPopupMenu();
                 
                 // Create "Save" and "Load" menu items
-                JMenuItem shiftMenuItem = new JMenuItem("shift");
+                JMenuItem selectAllMenuItem = new JMenuItem("select all");
                 JMenuItem clearMenuItem = new JMenuItem("clear");
 
-                shiftMenuItem.addActionListener(new ActionListener() {
+                selectAllMenuItem.addActionListener(new ActionListener() {
                     @Override
                     public void actionPerformed(ActionEvent e) {
+                        for (Component c : gui.getComponents()) {
+                            if (c instanceof Symbol) {
+                                gui.select((Symbol) c);
+                            }
+                        }
                     }
                 });
                 
                 clearMenuItem.addActionListener(new ActionListener() {
                     @Override
                     public void actionPerformed(ActionEvent e) {
+                        for (Component c : gui.getComponents()) {
+                            if (c instanceof Symbol) {
+                                gui.remove(c);
+                            }
+                        }
                     }
                 });
                 
                 // Add menu items to the popup menu
-                popupMenu.add(shiftMenuItem);
+                popupMenu.add(selectAllMenuItem);
                 popupMenu.add(clearMenuItem);
                 
                 // Display the popup menu at the location of the file button
@@ -139,6 +149,9 @@ class MenuBar extends JPanel {
         fileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
         int option = fileChooser.showOpenDialog(this);
         if (option == JFileChooser.APPROVE_OPTION) {
+            gui.removeAll();
+            gui.revalidate();
+            gui.repaint();
             String selectedFile = fileChooser.getSelectedFile().getAbsolutePath();
             try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(selectedFile))) {
             while (true) {
@@ -148,10 +161,13 @@ class MenuBar extends JPanel {
                         Symbol s = (Symbol) component;
                         gui.createNewSymbol(s.sym, s.getX(), s.getY());
                     }
+                    else {
+                        gui.add(component);
+                    }
                 } catch (ClassNotFoundException e) {
                     e.printStackTrace();
                 }
-            }
+        }
         } catch (IOException e) {
             // End of file reached or file does not exist
             System.out.println("Components loaded successfully.");
@@ -433,7 +449,7 @@ public class TrackGUI extends JPanel {
     }
 
     public String getTitle() {
-        return title;
+        return titleField.getText();
     }
 
     private void addTitlesComposer() {
@@ -483,7 +499,7 @@ public class TrackGUI extends JPanel {
         
     }
 
-    private void select(Symbol s) {
+    protected void select(Symbol s) {
         // make sure the same symbol is not selected twice
         if (selected.contains(s)) return;
         selected.add(s);
@@ -514,7 +530,7 @@ public class TrackGUI extends JPanel {
         return out;
     }
 
-    public void createNewSymbol(MusicSymbol newSym, int x, int y) {
+    protected void createNewSymbol(MusicSymbol newSym, int x, int y) {
         // align symbol to grid
         Point grid_point = getGridPoint(x, y);
         Symbol symbol = new Symbol(newSym, grid_point.x, grid_point.y);
@@ -522,13 +538,6 @@ public class TrackGUI extends JPanel {
         add(symbol);
         moveSymbol(symbol, grid_point.x, grid_point.y);
         calculateMeasureLocations();
-    }
-
-    private void createNewSymbol(MusicSymbol newSym) {
-        int x = (int) (Math.random() * 400); // Random x position
-        int y = (int) (Math.random() * 400); // Random y position
-        Point gridPoint = getGridPoint(x, y);
-        createNewSymbol(newSym, gridPoint.x, gridPoint.y);
     }
 
     private void moveSymbol(Symbol s, int x, int y) {

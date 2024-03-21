@@ -185,6 +185,3 @@ public class MidiPlayer extends JPanel {
     }
     
 }
-
-
-
