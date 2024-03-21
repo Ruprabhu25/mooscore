@@ -105,6 +105,10 @@ public class MidiPlayer extends JPanel {
         if (distance_from_center < 0)
             pitch_from_mid_c = ((distance_from_center / 7) * 12) - (12 - steps3[(steps3.length + (distance_from_center % 7) - 1) % 7]);
         System.out.println("vertical " + vertical_position + " distance " + distance_from_center + " pitch " + (12 - steps3[(steps3.length + (distance_from_center % 7) - 1) % 7]));
+        if (s.getAccidental() == MusicSymbol.SHARP)
+            pitch_from_mid_c += 1;
+        if (s.getAccidental() == MusicSymbol.FLAT)
+            pitch_from_mid_c -= 1;
         return 60 + pitch_from_mid_c;
     }
 

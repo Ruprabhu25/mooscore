@@ -71,6 +71,10 @@ class Symbol extends JComponent {
         updateBounds();
     }
 
+    public MusicSymbol getAccidental() {
+        return this.accidental;
+    }
+
     public void setAccidental(MusicSymbol newAccidental) {
         accidental = newAccidental;
         // clear accidental if arg is null or if new accidental is the same as old one
