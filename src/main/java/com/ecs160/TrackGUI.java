@@ -314,7 +314,7 @@ public class TrackGUI extends JPanel {
                 int miny = Math.min(drag_p1.y, drag_p2.y);
                 int maxy = Math.max(drag_p1.y, drag_p2.y);
                 Rectangle rect = new Rectangle(minx, miny, maxx- minx, maxy-miny);
-                for (Component c :  getComponentsInXOrder()) {
+                for (Symbol c :  getSymbolsInXOrder()) {
                     if (rect.intersects(c.getBounds())) select((Symbol) c);
                 }
                 drag_p1 = null;
@@ -485,9 +485,8 @@ public class TrackGUI extends JPanel {
     // this should be called after components are done being rearranged
     private void updateRows() {
         rows.clear();
-        ArrayList<Component> sorted = getComponentsInXOrder();
-        for (Component c : sorted) {
-            Symbol s = (Symbol) c; // grab first symbol
+        ArrayList<Symbol> sorted = getSymbolsInXOrder();
+        for (Symbol s : sorted) {
             int row = s.getBottomY() / (gridHeight * gridSize);
             while (rows.size() < (row + 2)) rows.add(new ArrayList<Symbol>());
             rows.get(row).add(s);
@@ -530,14 +529,13 @@ public class TrackGUI extends JPanel {
         // System.out.println(measureLocations);
     }
 
-    private ArrayList<Component> getComponentsInXOrder() {
+    private ArrayList<Symbol> getSymbolsInXOrder() {
         ArrayList<Component> children = new ArrayList<Component>(Arrays.asList(getComponents()));
-        
-        children.sort(Comparator.comparing(Component::getSymbolX));
-        int i = 0;
-        while (i < children.size()) 
-            else i++;
-        return children;
+        ArrayList<Symbol> symbols = new ArrayList<Symbol>();
+        for (Component c : children) 
+            if (c instanceof Symbol) symbols.add((Symbol) c); 
+        symbols.sort(Comparator.comparing(Symbol::getSymbolX));
+        return symbols;
     }
 
     @Override

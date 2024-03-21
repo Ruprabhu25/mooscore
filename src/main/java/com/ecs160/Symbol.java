@@ -92,7 +92,7 @@ class Symbol extends JComponent {
     // update the bounds of the component to fit both the symbol
     // and accidental
     private void updateBounds() {
-        setBounds(getX(), getY(), 
+        setBounds(getX() - accidentalWidth, getY(), 
             symbolWidth + accidentalWidth, 
             Math.max(symbolHeight, accidentalHeight));
     }
